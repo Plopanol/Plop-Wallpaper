@@ -1,5 +1,6 @@
 #include "theme.h"
 
+#include <commctrl.h>
 #include <dwmapi.h>
 #include <uxtheme.h>
 #include <winrt/Windows.UI.ViewManagement.h>
@@ -52,6 +53,15 @@ void WindowTheme::refresh(HWND window)
     for (HWND child = GetWindow(window, GW_CHILD); child; child = GetWindow(child, GW_HWNDNEXT)) {
         // Explorer styling complements the explicit colors for native combo boxes and scrollbars.
         SetWindowTheme(child, dark_ ? L"DarkMode_Explorer" : nullptr, nullptr);
+        wchar_t name[32]{};
+        GetClassNameW(child, name, ARRAYSIZE(name));
+        if (lstrcmpW(name, WC_LISTVIEWW) == 0) {
+            const auto background = dark_ ? fieldColor : GetSysColor(COLOR_WINDOW);
+            ListView_SetBkColor(child, background);
+            ListView_SetTextBkColor(child, background);
+            ListView_SetTextColor(child, dark_ ? textColor : GetSysColor(COLOR_WINDOWTEXT));
+            SetWindowTheme(ListView_GetHeader(child), dark_ ? L"DarkMode_ItemsView" : nullptr, nullptr);
+        }
     }
     RedrawWindow(window, nullptr, nullptr, RDW_INVALIDATE | RDW_ERASE | RDW_ALLCHILDREN);
 }

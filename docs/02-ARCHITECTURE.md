@@ -13,7 +13,7 @@ Exécutable natif Windows 11 x64 en C++20, compilé avec MSVC et CMake. La boucl
 | `WallpaperManager` | Interaction COM avec `IDesktopWallpaper`, changement ciblé avec `SetWallpaper` et prise en compte des limites d’ajustement. |
 | `ImageCatalog` | Catalogue de chemins par dossier, actualisé au démarrage et lorsque nécessaire. |
 | `RotationScheduler` | Timer Win32 commun aux moniteurs participants pour la cadence générale. Timers indépendants, historique et pause prévus. |
-| `TrayManager` | Icône à la réduction et menu via `Shell_NotifyIcon`, restauration après redémarrage d’Explorer. Le clic déclenche la même rotation que le minuteur lorsqu’elle est active. |
+| `TrayManager` | Icône à la réduction et menu via `Shell_NotifyIcon`, restauration après redémarrage d’Explorer. Le clic simple est différé selon le délai de double-clic Windows. Il déclenche la rotation si elle est active ou restaure la fenêtre. Le double-clic annule cette action différée et restaure la fenêtre. |
 | `SettingsManager` | Chargement, valeurs par défaut et sauvegarde du fichier INI. |
 | `MainWindow` | Contrôles Win32 et rubriques de configuration en français, avec suivi du mode clair ou sombre de Windows. |
 

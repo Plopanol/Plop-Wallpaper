@@ -1,6 +1,6 @@
 # TASK-006 — Préparer la publication
 
-- **Statut :** En cours
+- **Statut :** À valider
 - **Phase :** Phase 4 — Persistance et événements Windows
 - **Priorité :** Haute
 - **Dépendances :** TASK-005
@@ -23,7 +23,7 @@
 |---|---|---|---|---|
 | 1 | Licence MIT et inclusion dans le paquet | Attribution du copyright validée | Contrôle documentaire et lecture du script | Terminé |
 | 2 | Actualiser les écrans et conserver le fond affiché durant le changement de dossier | Plan validé | Compilation et tests de non-régression | Terminé |
-| 3 | Restaurer la fenêtre au double-clic et présenter les réglages par écran | Lot 2 | Compilation, contrôles complets et essai manuel | À faire |
+| 3 | Restaurer la fenêtre au double-clic et présenter les réglages par écran | Lot 2 | Compilation, contrôles complets et essai manuel | À valider |
 
 ## Journal des lots
 
@@ -31,10 +31,18 @@
 
 2026-11-14 — Lot 2 implémenté. Release et Debug x64 de validation construits, deux tests CTest réussis. Les deux premiers critères sont validés par l’utilisateur.
 
+2026-11-14 — Lot 3 implémenté. Le tableau présente les réglages par écran et le double-clic annule le clic simple différé.
+
 ## Validation et preuves
 
 2026-11-14 — L’utilisateur a validé les parcours de branchement et de changement de dossier sur le Debug x64 du commit `39b206a`.
 
+2026-11-14 — Compilations Release x64 et Debug x64 réussies, trois tests CTest réussis en Release, dont l’annulation du clic différé. Essai manuel du tableau et de l’icône en attente sur `build/debug-validation/Debug/PlopWallpaper.exe`.
+
+2026-11-14 — Scan de publication avec historique sans correspondance. Le contrôle documentaire a d’abord détecté le lien vers la tâche en attente de validation dans « Prochaine tâche ». Après correction de la roadmap, Test-Docs et Sync-Commun ont réussi.
+
 ## Obstacles et reprise
 
-Plan du lot 2 validé le 2026-11-14. Validation manuelle du lot 2 consignée. Anomalies liées : [BUG-002](../bugs/BUG-002-liste-ecrans-obsolete.md) et [BUG-003](../bugs/BUG-003-ajustement-apres-changement-dossier.md).
+Essai du lot 3 attendu sur deux écrans, dont un en portrait. Vérifier la sélection, la mise à jour du mode, de l’ordre de rotation, du dossier et de l’ajustement dans le tableau, ainsi que son actualisation au débranchement et à la reconnexion. Avec la rotation active, vérifier qu’un clic simple change le fond des écrans participants et qu’un double-clic restaure la fenêtre sans changer de fond. Avec la rotation désactivée, vérifier que le clic simple restaure la fenêtre.
+
+Anomalies liées : [BUG-002](../bugs/BUG-002-liste-ecrans-obsolete.md) et [BUG-003](../bugs/BUG-003-ajustement-apres-changement-dossier.md).

@@ -1,4 +1,5 @@
 #include "settings.h"
+#include "tray_click.h"
 
 #include <iostream>
 #include <string_view>
@@ -89,12 +90,27 @@ bool folderChange()
 
 }
 
+bool trayClick()
+{
+    TrayClick click;
+    click.defer();
+    click.cancel();
+    if (click.take()) {
+        return false;
+    }
+    click.defer();
+    return click.take() && !click.take();
+}
+
 int main(int argc, char** argv)
 {
     if (argc != 2) {
         return 2;
     }
     const std::string_view test = argv[1];
+    if (test == "TASK-006-tray-click") {
+        return trayClick() ? 0 : 1;
+    }
     if (test != "BUG-002" && test != "BUG-003") {
         return 2;
     }

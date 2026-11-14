@@ -57,4 +57,4 @@ Jalon : les mesures sont consignées et la procédure de production du paquet es
 
 ## Prochaine tâche
 
-[TASK-006 — Préparer la publication](tasks/TASK-006-preparer-la-publication.md)
+Aucune tâche planifiée.

@@ -11,7 +11,7 @@ set_property(TARGET PlopWallpaper PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<
 target_compile_features(PlopWallpaper PRIVATE cxx_std_20)
 target_compile_definitions(PlopWallpaper PRIVATE UNICODE _UNICODE NOMINMAX WIN32_LEAN_AND_MEAN)
 target_compile_options(PlopWallpaper PRIVATE /W4 /permissive- /utf-8)
-target_link_libraries(PlopWallpaper PRIVATE ole32 uuid user32 gdi32 shell32 windowscodecs dwmapi uxtheme windowsapp)
+target_link_libraries(PlopWallpaper PRIVATE ole32 uuid user32 gdi32 shell32 windowscodecs dwmapi uxtheme windowsapp comctl32)
 target_link_options(PlopWallpaper PRIVATE
     "/MANIFESTDEPENDENCY:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'")
 
@@ -25,4 +25,5 @@ if(BUILD_TESTING)
     target_link_libraries(PlopWallpaperTests PRIVATE ole32 user32)
     add_test(NAME BUG-002 COMMAND PlopWallpaperTests BUG-002)
     add_test(NAME BUG-003 COMMAND PlopWallpaperTests BUG-003)
+    add_test(NAME TASK-006-tray-click COMMAND PlopWallpaperTests TASK-006-tray-click)
 endif()

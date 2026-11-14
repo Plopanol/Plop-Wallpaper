@@ -2,7 +2,9 @@
 #include "settings.h"
 #include "startup.h"
 #include "theme.h"
+#include "tray_click.h"
 
+#include <commctrl.h>
 #include <dbt.h>
 #include <shellapi.h>
 #include <windowsx.h>
@@ -30,6 +32,7 @@ constexpr int randomId = 113;
 constexpr int monitorLabelId = 114;
 constexpr UINT_PTR rotationTimer = 1;
 constexpr UINT_PTR monitorTimer = 2;
+constexpr UINT_PTR trayClickTimer = 3;
 constexpr UINT monitorRefreshDelay = 250;
 constexpr UINT trayMessage = WM_APP + 1;
 constexpr UINT trayIconId = 1;
@@ -79,6 +82,7 @@ struct WindowState {
     std::vector<MonitorSettings> selections;
     UINT taskbarCreated = 0;
     bool inTray = false;
+    TrayClick trayClick;
     bool handlingCommand = false;
     bool monitorsPending = false;
 };
@@ -112,6 +116,8 @@ bool addTrayIcon(HWND window)
 
 void restoreWindow(HWND window, WindowState& state)
 {
+    KillTimer(window, trayClickTimer);
+    state.trayClick.cancel();
     state.inTray = false;
     auto icon = trayIcon(window);
     Shell_NotifyIconW(NIM_DELETE, &icon);
@@ -156,6 +162,44 @@ void showRotationSettings(HWND window, const RotationSettings& rotation)
     SetDlgItemInt(window, minutesId, rotation.minutes, FALSE);
 }
 
+constexpr PCWSTR fitLabels[]{L"Étirer", L"Ajuster à la largeur", L"Ajuster à la hauteur"};
+
+int monitorFit(const WindowState& state, size_t index)
+{
+    RECT bounds{};
+    if (state.wallpaper->GetMonitorRECT(state.monitors[index].id.c_str(), &bounds) != S_OK ||
+        bounds.bottom - bounds.top <= bounds.right - bounds.left) {
+        return 0;
+    }
+    return state.selections[index].fit == PortraitFit::Width ? 1 : 2;
+}
+
+bool updateMonitorRow(HWND window, const WindowState& state, int row)
+{
+    if (row >= ListView_GetItemCount(GetDlgItem(window, monitorListId))) {
+        return false;
+    }
+    const auto index = static_cast<size_t>(row);
+    const auto& selection = state.selections[index];
+    PCWSTR cells[]{
+        selection.uniqueActive ? L"Unique" : L"Rotation",
+        !selection.uniqueActive && selection.participates && state.rotation.random ? L"Aléatoire" : L"Fixe",
+        selection.folder.empty() ? L"—" : selection.folder.c_str(),
+        fitLabels[monitorFit(state, index)]
+    };
+    const HWND list = GetDlgItem(window, monitorListId);
+    for (int column = 0; column < ARRAYSIZE(cells); ++column) {
+        LVITEMW item{};
+        item.iSubItem = column + 1;
+        item.pszText = const_cast<PWSTR>(cells[column]);
+        if (!SendMessageW(list, LVM_SETITEMTEXTW, row, reinterpret_cast<LPARAM>(&item))) {
+            OutputDebugStringW(L"Impossible d’actualiser les réglages dans le tableau des écrans.\n");
+            return false;
+        }
+    }
+    return true;
+}
+
 HRESULT scheduleRotation(HWND window, const RotationSettings& rotation)
 {
     if (!rotation.enabled) {
@@ -195,6 +239,10 @@ void applyRotationSettings(HWND window, WindowState& state)
         return;
     }
     state.rotation = next;
+    const int rows = ListView_GetItemCount(GetDlgItem(window, monitorListId));
+    for (int row = 0; row < rows; ++row) {
+        updateMonitorRow(window, state, row);
+    }
     SetDlgItemTextW(window, statusId, L"Réglages de rotation enregistrés.");
 }
 
@@ -223,6 +271,7 @@ void rotateWallpapers(HWND window, WindowState& state)
                 OutputDebugStringW(L"Rotation : impossible de changer ou d’enregistrer un fond.\n");
                 failed = true;
             }
+            updateMonitorRow(window, state, static_cast<int>(index));
         }
     }
     if (failed) {
@@ -230,9 +279,10 @@ void rotateWallpapers(HWND window, WindowState& state)
     }
 }
 
-void updateSelection(HWND window, WindowState& state, LRESULT index)
+void updateSelection(HWND window, WindowState& state, int index)
 {
-    const auto* selection = index == LB_ERR ? nullptr : &state.selections[static_cast<size_t>(index)];
+    const auto* selection = index < 0 || static_cast<size_t>(index) >= state.selections.size()
+        ? nullptr : &state.selections[static_cast<size_t>(index)];
     const bool hasFolder = selection && !selection->folder.empty();
     SetDlgItemTextW(window, folderPathId, hasFolder ? selection->folder.c_str() : L"Aucun dossier sélectionné");
     SetDlgItemTextW(window, imagePathId, selection && !selection->uniqueImage.empty()
@@ -243,35 +293,38 @@ void updateSelection(HWND window, WindowState& state, LRESULT index)
     EnableWindow(GetDlgItem(window, changeWallpaperId), hasFolder);
     EnableWindow(GetDlgItem(window, participationId), selection != nullptr);
     CheckDlgButton(window, participationId, selection && selection->participates ? BST_CHECKED : BST_UNCHECKED);
-    RECT bounds{};
-    const bool portrait = selection &&
-        state.wallpaper->GetMonitorRECT(state.monitors[static_cast<size_t>(index)].id.c_str(), &bounds) == S_OK &&
-        bounds.bottom - bounds.top > bounds.right - bounds.left;
-    EnableWindow(GetDlgItem(window, fitId), portrait);
-    const int fit = portrait ? (selection->fit == PortraitFit::Width ? 1 : 2) : (selection ? 0 : -1);
+    const int fit = selection ? monitorFit(state, static_cast<size_t>(index)) : -1;
+    EnableWindow(GetDlgItem(window, fitId), fit > 0);
     SendDlgItemMessageW(window, fitId, CB_SETCURSEL, fit, 0);
 }
 
 bool showMonitors(HWND window, WindowState& state, const std::wstring& selectedId)
 {
     const HWND list = GetDlgItem(window, monitorListId);
-    SendMessageW(list, LB_RESETCONTENT, 0, 0);
-    LRESULT selected = LB_ERR;
+    ListView_DeleteAllItems(list);
+    int selected = -1;
+    int row = 0;
     for (const auto& monitor : state.monitors) {
-        const auto index = SendMessageW(list, LB_ADDSTRING, 0,
-            reinterpret_cast<LPARAM>(monitor.label.c_str()));
-        if (index < 0) {
-            SendMessageW(list, LB_RESETCONTENT, 0, 0);
-            updateSelection(window, state, LB_ERR);
+        LVITEMW item{};
+        item.mask = LVIF_TEXT;
+        item.iItem = row;
+        item.pszText = const_cast<PWSTR>(monitor.label.c_str());
+        if (ListView_InsertItem(list, &item) < 0 || !updateMonitorRow(window, state, row)) {
+            ListView_DeleteAllItems(list);
+            updateSelection(window, state, -1);
             return false;
         }
-        if (selected == LB_ERR || monitor.id == selectedId) {
-            selected = index;
+        if (selected < 0 || monitor.id == selectedId) {
+            selected = row;
         }
+        ++row;
     }
     SetDlgItemTextW(window, monitorLabelId,
         state.monitors.empty() ? L"Aucun écran détecté." : L"Écrans connectés");
-    SendMessageW(list, LB_SETCURSEL, selected, 0);
+    if (selected >= 0) {
+        ListView_SetItemState(list, selected, LVIS_SELECTED | LVIS_FOCUSED, LVIS_SELECTED | LVIS_FOCUSED);
+        ListView_EnsureVisible(list, selected, FALSE);
+    }
     updateSelection(window, state, selected);
     return true;
 }
@@ -285,8 +338,8 @@ bool refreshMonitors(HWND window, WindowState& state)
         return false;
     }
 
-    const auto index = SendDlgItemMessageW(window, monitorListId, LB_GETCURSEL, 0, 0);
-    const auto selectedId = index == LB_ERR ? std::wstring{} : state.monitors[static_cast<size_t>(index)].id;
+    const int index = ListView_GetNextItem(GetDlgItem(window, monitorListId), -1, LVNI_SELECTED);
+    const auto selectedId = index < 0 ? std::wstring{} : state.monitors[static_cast<size_t>(index)].id;
     std::vector<MonitorSettings> selections;
     selections.reserve(monitors.size());
     for (const auto& monitor : monitors) {
@@ -317,6 +370,16 @@ void scheduleMonitorRefresh(HWND window, WindowState& state)
     }
 }
 
+void activateTrayClick(HWND window, WindowState& state)
+{
+    if (!state.rotation.enabled) {
+        restoreWindow(window, state);
+    } else if (!state.handlingCommand && (!state.monitorsPending || refreshMonitors(window, state))) {
+        state.monitorsPending = false;
+        rotateWallpapers(window, state);
+    }
+}
+
 void handleCommand(HWND window, WindowState& state, WPARAM command)
 {
     const int id = LOWORD(command);
@@ -336,16 +399,14 @@ void handleCommand(HWND window, WindowState& state, WPARAM command)
         applyRotationSettings(window, state);
         return;
     }
-    const LRESULT index = SendDlgItemMessageW(window, monitorListId, LB_GETCURSEL, 0, 0);
-    if (index == LB_ERR) {
-        updateSelection(window, state, LB_ERR);
+    const int index = ListView_GetNextItem(GetDlgItem(window, monitorListId), -1, LVNI_SELECTED);
+    if (index < 0) {
+        updateSelection(window, state, -1);
         return;
     }
     auto& selection = state.selections[static_cast<size_t>(index)];
     const auto& monitor = state.monitors[static_cast<size_t>(index)];
-    if (id == monitorListId && notification == LBN_SELCHANGE) {
-        updateSelection(window, state, index);
-    } else if (id == fitId && notification == CBN_SELCHANGE) {
+    if (id == fitId && notification == CBN_SELCHANGE) {
         const auto choice = SendDlgItemMessageW(window, fitId, CB_GETCURSEL, 0, 0);
         if (choice != 1 && choice != 2) {
             updateSelection(window, state, index);
@@ -434,7 +495,10 @@ void handleCommand(HWND window, WindowState& state, WPARAM command)
         } else {
             SetDlgItemTextW(window, statusId, L"Fond d’écran appliqué.");
         }
+    } else {
+        return;
     }
+    updateMonitorRow(window, state, index);
 }
 
 LRESULT CALLBACK windowProcedure(HWND window, UINT message, WPARAM key, LPARAM data)
@@ -453,8 +517,8 @@ LRESULT CALLBACK windowProcedure(HWND window, UINT message, WPARAM key, LPARAM d
         SetWindowLongPtrW(window, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(&state));
         state.taskbarCreated = RegisterWindowMessageW(L"TaskbarCreated");
         HWND label = createControl(window, L"STATIC", L"Écrans connectés", 0, 16, 16, 540, 22, monitorLabelId);
-        HWND list = createControl(window, L"LISTBOX", L"", WS_BORDER | WS_VSCROLL |
-            WS_TABSTOP | LBS_NOINTEGRALHEIGHT | LBS_NOTIFY, 16, 40, 540, 60, monitorListId);
+        HWND list = createControl(window, WC_LISTVIEWW, L"", WS_BORDER | WS_TABSTOP |
+            LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER, 16, 40, 540, 66, monitorListId);
         if (!label || !list ||
             !createControl(window, L"STATIC", L"Rotation", SS_OWNERDRAW, 16, 112, 540, 176) ||
             !createControl(window, L"EDIT", L"", WS_BORDER | WS_TABSTOP | ES_READONLY | ES_AUTOHSCROLL,
@@ -489,8 +553,21 @@ LRESULT CALLBACK windowProcedure(HWND window, UINT message, WPARAM key, LPARAM d
             SetLastError(ERROR_CANNOT_MAKE);
             return -1;
         }
+        ListView_SetExtendedListViewStyle(list, LVS_EX_FULLROWSELECT | LVS_EX_DOUBLEBUFFER | LVS_EX_INFOTIP);
+        constexpr PCWSTR headers[]{L"Nom écran", L"Mode actuel", L"Aléatoire/Fixe", L"Dossier", L"Ajustement"};
+        constexpr int widths[]{100, 80, 94, 116, 130};
+        for (int index = 0; index < ARRAYSIZE(headers); ++index) {
+            LVCOLUMNW column{};
+            column.mask = LVCF_TEXT | LVCF_WIDTH;
+            column.pszText = const_cast<PWSTR>(headers[index]);
+            column.cx = widths[index];
+            if (ListView_InsertColumn(list, index, &column) < 0) {
+                SetLastError(ERROR_CANNOT_MAKE);
+                return -1;
+            }
+        }
         const HWND fit = GetDlgItem(window, fitId);
-        for (PCWSTR mode : {L"Étirer", L"Ajuster à la largeur", L"Ajuster à la hauteur"}) {
+        for (PCWSTR mode : fitLabels) {
             if (SendMessageW(fit, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(mode)) < 0) {
                 SetLastError(ERROR_NOT_ENOUGH_MEMORY);
                 return -1;
@@ -551,6 +628,17 @@ LRESULT CALLBACK windowProcedure(HWND window, UINT message, WPARAM key, LPARAM d
             }
         }
         break;
+    case WM_NOTIFY: {
+        const auto& notification = *reinterpret_cast<const NMHDR*>(data);
+        if (windowState && notification.idFrom == monitorListId && notification.code == LVN_ITEMCHANGED) {
+            const auto& change = *reinterpret_cast<const NMLISTVIEW*>(data);
+            if (((change.uOldState ^ change.uNewState) & LVIS_SELECTED) != 0) {
+                const int index = ListView_GetNextItem(notification.hwndFrom, -1, LVNI_SELECTED);
+                updateSelection(window, *windowState, index);
+            }
+        }
+        break;
+    }
     case WM_SIZE:
         if (key == SIZE_MINIMIZED && windowState && !windowState->inTray &&
             windowState->taskbarCreated && addTrayIcon(window)) {
@@ -563,19 +651,28 @@ LRESULT CALLBACK windowProcedure(HWND window, UINT message, WPARAM key, LPARAM d
             const UINT event = LOWORD(data);
             if (event == WM_CONTEXTMENU) {
                 showTrayMenu(window, *windowState, GET_X_LPARAM(key), GET_Y_LPARAM(key));
-            } else if (event == WM_LBUTTONUP || event == NIN_KEYSELECT) {
-                if (!windowState->rotation.enabled) {
+            } else if (event == WM_LBUTTONDBLCLK) {
+                restoreWindow(window, *windowState);
+            } else if (event == NIN_KEYSELECT) {
+                activateTrayClick(window, *windowState);
+            } else if (event == WM_LBUTTONUP) {
+                // A double-click notification must cancel the deferred single-click action.
+                if (SetTimer(window, trayClickTimer, GetDoubleClickTime(), nullptr)) {
+                    windowState->trayClick.defer();
+                } else {
+                    OutputDebugStringW(L"Impossible de différer le clic sur l’icône de notification.\n");
                     restoreWindow(window, *windowState);
-                } else if (!windowState->handlingCommand &&
-                           (!windowState->monitorsPending || refreshMonitors(window, *windowState))) {
-                    windowState->monitorsPending = false;
-                    rotateWallpapers(window, *windowState);
                 }
             }
         }
         return 0;
     case WM_TIMER:
-        if (key == monitorTimer && windowState && !windowState->handlingCommand) {
+        if (key == trayClickTimer && windowState) {
+            KillTimer(window, trayClickTimer);
+            if (windowState->trayClick.take()) {
+                activateTrayClick(window, *windowState);
+            }
+        } else if (key == monitorTimer && windowState && !windowState->handlingCommand) {
             KillTimer(window, monitorTimer);
             windowState->monitorsPending = !refreshMonitors(window, *windowState);
         } else if (key == rotationTimer && windowState && windowState->rotation.enabled &&
@@ -605,6 +702,7 @@ LRESULT CALLBACK windowProcedure(HWND window, UINT message, WPARAM key, LPARAM d
         }
         KillTimer(window, rotationTimer);
         KillTimer(window, monitorTimer);
+        KillTimer(window, trayClickTimer);
         PostQuitMessage(0);
         return 0;
     }
@@ -613,6 +711,11 @@ LRESULT CALLBACK windowProcedure(HWND window, UINT message, WPARAM key, LPARAM d
 
 int run(HINSTANCE instance, int show)
 {
+    INITCOMMONCONTROLSEX controls{sizeof(controls), ICC_LISTVIEW_CLASSES};
+    if (!InitCommonControlsEx(&controls)) {
+        showError(nullptr, L"Impossible d’initialiser le tableau des écrans.", E_FAIL);
+        return 1;
+    }
     std::wstring executable(32768, L'\0');
     const DWORD length = GetModuleFileNameW(nullptr, executable.data(), static_cast<DWORD>(executable.size()));
     if (!length || length == executable.size()) {
