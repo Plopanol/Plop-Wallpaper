@@ -48,4 +48,4 @@ Jalon : les mesures sont consignées et la procédure de production du paquet es
 
 ## Prochaine tâche
 
-[TASK-003 — Configurer les fonds et le démarrage](tasks/TASK-003-configurer-les-fonds-et-le-demarrage.md)
+Aucune tâche planifiée.

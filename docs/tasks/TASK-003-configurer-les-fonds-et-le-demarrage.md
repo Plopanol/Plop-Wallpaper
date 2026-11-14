@@ -1,6 +1,6 @@
 # TASK-003 — Configurer les fonds et le démarrage
 
-- **Statut :** En cours
+- **Statut :** À valider
 - **Phase :** Phase 2 — Rotation indépendante
 - **Priorité :** Normale
 - **Dépendances :** TASK-002
@@ -24,17 +24,20 @@
 |---|---|---|---|---|
 | 1 | Modes d’ajustement paysage et portrait | TASK-002 | Vérifier les trois modes sur deux écrans | À valider |
 | 2 | Réglage général de rotation en minutes et persistance INI | TASK-002 | Vérifier l’activation, la cadence, la désactivation et la relance | À valider |
-| 3 | Option de lancement avec Windows | Aucune | Vérifier l’ouverture de session avec l’option activée puis désactivée | À faire |
+| 3 | Option de lancement avec Windows | Aucune | Vérifier l’ouverture de session avec l’option activée puis désactivée | À valider |
 
 ## Journal des lots
 
 - 2026-11-14 — Lot 1 compilé en Debug x64. Le contrôle documentaire passe. Essai sur deux écrans en attente.
 - 2026-11-14 — Lot 2 compilé en Debug x64. La cadence commune et la persistance restent à vérifier manuellement.
+- 2026-11-14 — Lot 3 compilé en Debug x64. Le lancement à l’ouverture de session reste à vérifier manuellement.
 
 ## Validation et preuves
 
-Non exécutée.
+- 2026-11-14 — Compilation Debug x64 réussie. La configuration locale du build utilise les symboles intégrés (`/Z7`) après une erreur MSVC C1902 avec le mode de symboles par défaut.
+- 2026-11-14 — Vérification rapide documentaire réussie. Contrôle complet de clôture à exécuter après la validation manuelle et l’incrément de version.
+- Essais manuels en attente : rendu et indépendance sur deux moniteurs, rotation et exclusion d’un moniteur, restauration des réglages, ouverture de session avec démarrage activé puis désactivé.
 
 ## Obstacles et reprise
 
-Aucun obstacle identifié.
+Valider l’exécutable Debug sur Windows 11 avec un écran paysage et un écran portrait, puis reprendre la clôture.

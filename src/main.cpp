@@ -1,4 +1,5 @@
 #include "settings.h"
+#include "startup.h"
 
 #include <wrl/client.h>
 
@@ -17,6 +18,7 @@ constexpr int participationId = 106;
 constexpr int rotationId = 107;
 constexpr int minutesId = 108;
 constexpr int applyRotationId = 109;
+constexpr int startupId = 110;
 constexpr UINT_PTR rotationTimer = 1;
 
 void showError(HWND owner, PCWSTR message, HRESULT result)
@@ -42,14 +44,17 @@ HWND createControl(HWND window, PCWSTR type, PCWSTR text, DWORD style,
 }
 
 struct WindowState {
-    explicit WindowState(const std::filesystem::path& directory)
-        : cache(directory / L"fonds-générés"), settings(directory / L"config.ini")
+    explicit WindowState(std::filesystem::path executablePath)
+        : executable(std::move(executablePath)),
+          cache(executable.parent_path() / L"fonds-générés"),
+          settings(executable.parent_path() / L"config.ini")
     {
     }
 
     std::vector<Monitor> monitors;
     ComPtr<IDesktopWallpaper> wallpaper;
     ComPtr<IWICImagingFactory> imaging;
+    std::filesystem::path executable;
     std::filesystem::path cache;
     Settings settings;
     RotationSettings rotation;
@@ -152,6 +157,17 @@ void handleCommand(HWND window, WindowState& state, WPARAM command)
 {
     const int id = LOWORD(command);
     const int notification = HIWORD(command);
+    if (id == startupId && notification == BN_CLICKED) {
+        const bool enabled = IsDlgButtonChecked(window, startupId) == BST_CHECKED;
+        const HRESULT result = setStartupEnabled(state.executable, enabled);
+        if (FAILED(result)) {
+            CheckDlgButton(window, startupId, enabled ? BST_UNCHECKED : BST_CHECKED);
+            showError(window, L"Impossible de modifier le lancement avec Windows.", result);
+        } else {
+            SetDlgItemTextW(window, statusId, L"Réglage de démarrage enregistré.");
+        }
+        return;
+    }
     if (id == applyRotationId && notification == BN_CLICKED) {
         applyRotationSettings(window, state);
         return;
@@ -265,7 +281,9 @@ LRESULT CALLBACK windowProcedure(HWND window, UINT message, WPARAM key, LPARAM d
                 398, 332, 64, 24, minutesId) ||
             !createControl(window, L"BUTTON", L"Appliquer", WS_TABSTOP,
                 470, 330, 86, 28, applyRotationId) ||
-            !createControl(window, L"STATIC", L"", 0, 16, 374, 540, 42, statusId)) {
+            !createControl(window, L"BUTTON", L"Lancer Plop-Wallpaper à l’ouverture de session",
+                WS_TABSTOP | BS_AUTOCHECKBOX, 16, 370, 540, 24, startupId) ||
+            !createControl(window, L"STATIC", L"", 0, 16, 405, 540, 42, statusId)) {
             SetLastError(ERROR_CANNOT_MAKE);
             return -1;
         }
@@ -324,7 +342,7 @@ int run(HINSTANCE instance, int show)
         return 1;
     }
     executable.resize(length);
-    WindowState state(std::filesystem::path(executable).parent_path());
+    WindowState state{std::filesystem::path(executable)};
     HRESULT result = CoCreateInstance(CLSID_DesktopWallpaper, nullptr, CLSCTX_ALL,
                                       IID_PPV_ARGS(state.wallpaper.GetAddressOf()));
     if (FAILED(result)) {
@@ -360,7 +378,7 @@ int run(HINSTANCE instance, int show)
     }
 
     constexpr DWORD style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
-    RECT size{0, 0, 572, 430};
+    RECT size{0, 0, 572, 461};
     AdjustWindowRect(&size, style, FALSE);
     HWND window = CreateWindowW(appName, appName, style, CW_USEDEFAULT, CW_USEDEFAULT,
                                 size.right - size.left, size.bottom - size.top,
@@ -370,6 +388,14 @@ int run(HINSTANCE instance, int show)
         return 1;
     }
     ShowWindow(window, show);
+    bool startupEnabled = false;
+    result = readStartupEnabled(startupEnabled);
+    if (FAILED(result)) {
+        EnableWindow(GetDlgItem(window, startupId), FALSE);
+        showError(window, L"Impossible de lire le réglage de démarrage.", result);
+    } else {
+        CheckDlgButton(window, startupId, startupEnabled ? BST_CHECKED : BST_UNCHECKED);
+    }
     result = scheduleRotation(window, state.rotation);
     if (FAILED(result)) {
         state.rotation.enabled = false;

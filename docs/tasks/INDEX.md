@@ -6,7 +6,7 @@ La fiche fait foi pour le statut. La [roadmap](../03-ROADMAP.md) porte la procha
 
 | ID | Titre | Statut | Phase | Priorité |
 |---|---|---|---|---|
-| [TASK-003](TASK-003-configurer-les-fonds-et-le-demarrage.md) | Configurer les fonds et le démarrage | En cours | Phase 2 — Rotation indépendante | Normale |
+| [TASK-003](TASK-003-configurer-les-fonds-et-le-demarrage.md) | Configurer les fonds et le démarrage | À valider | Phase 2 — Rotation indépendante | Normale |
 
 ## À faire
 
