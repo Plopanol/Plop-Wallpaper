@@ -50,6 +50,9 @@ MonitorSettings Settings::loadMonitor(const Monitor& monitor) const
     value.fit = GetPrivateProfileIntW(section.c_str(), L"FitHeight", 0, path_.c_str()) == 1
         ? PortraitFit::Height : PortraitFit::Width;
     value.participates = GetPrivateProfileIntW(section.c_str(), L"Participates", 1, path_.c_str()) != 0;
+    value.uniqueImage = readPath(section.c_str(), L"UniqueImage", path_.c_str());
+    value.uniqueActive = !value.uniqueImage.empty() &&
+        GetPrivateProfileIntW(section.c_str(), L"UniqueActive", 0, path_.c_str()) == 1;
     return value;
 }
 
@@ -71,6 +74,8 @@ HRESULT Settings::saveMonitor(const Monitor& monitor, const MonitorSettings& val
     appendField(fields, L"LastImage", value.lastImage.c_str());
     appendField(fields, L"FitHeight", value.fit == PortraitFit::Height ? L"1" : L"0");
     appendField(fields, L"Participates", value.participates ? L"1" : L"0");
+    appendField(fields, L"UniqueImage", value.uniqueImage.c_str());
+    appendField(fields, L"UniqueActive", value.uniqueActive ? L"1" : L"0");
     return save(monitorSection(monitor).c_str(), std::move(fields));
 }
 

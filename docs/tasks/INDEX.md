@@ -1,10 +1,12 @@
 # Index des tâches
 
-La fiche fait foi pour le statut. La [roadmap](../03-ROADMAP.md) porte la prochaine tâche. Prochain identifiant libre : TASK-004.
+La fiche fait foi pour le statut. La [roadmap](../03-ROADMAP.md) porte la prochaine tâche. Prochain identifiant libre : TASK-005.
 
 ## Actives
 
-Aucune.
+| ID | Titre | Statut | Phase | Priorité |
+|---|---|---|---|---|
+| [TASK-004](TASK-004-organiser-et-thematiser-interface.md) | Organiser et thématiser l’interface | En cours | Phase 3 — Interface et zone de notification | Normale |
 
 ## À faire
 

@@ -7,6 +7,13 @@ struct MonitorSettings {
     std::filesystem::path lastImage;
     PortraitFit fit = PortraitFit::Width;
     bool participates = true;
+    std::filesystem::path uniqueImage;
+    bool uniqueActive = false;
+
+    const std::filesystem::path& currentImage() const
+    {
+        return uniqueActive ? uniqueImage : lastImage;
+    }
 };
 
 struct RotationSettings {

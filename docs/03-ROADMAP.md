@@ -32,6 +32,10 @@ Jalon : deux écrans changent de fond à des intervalles distincts.
 
 Interface de configuration et commandes en arrière-plan, avec restauration de l’icône après redémarrage d’Explorer.
 
+| Ordre | Livrable | Dépendances |
+|---|---|---|
+| [TASK-004](tasks/TASK-004-organiser-et-thematiser-interface.md) | Rubriques, image par écran et thème Windows | TASK-003 |
+
 Jalon : les rotations continuent lorsque la fenêtre est masquée.
 
 ## Phase 4 — Persistance et événements Windows
@@ -48,4 +52,4 @@ Jalon : les mesures sont consignées et la procédure de production du paquet es
 
 ## Prochaine tâche
 
-Aucune tâche planifiée.
+[TASK-004 — Organiser et thématiser l’interface](tasks/TASK-004-organiser-et-thematiser-interface.md)

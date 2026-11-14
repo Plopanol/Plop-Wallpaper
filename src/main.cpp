@@ -19,6 +19,8 @@ constexpr int rotationId = 107;
 constexpr int minutesId = 108;
 constexpr int applyRotationId = 109;
 constexpr int startupId = 110;
+constexpr int chooseImageId = 111;
+constexpr int imagePathId = 112;
 constexpr UINT_PTR rotationTimer = 1;
 
 void showError(HWND owner, PCWSTR message, HRESULT result)
@@ -114,7 +116,11 @@ HRESULT advanceWallpaper(WindowState& state, size_t index)
     const auto& monitor = state.monitors[index];
     const HRESULT result = changeWallpaper(*state.wallpaper.Get(), *state.imaging.Get(),
         monitor, selection.fit, state.cache, selection.folder, selection.lastImage);
-    return result == S_OK ? state.settings.saveMonitor(monitor, selection) : result;
+    if (result != S_OK) {
+        return result;
+    }
+    selection.uniqueActive = false;
+    return state.settings.saveMonitor(monitor, selection);
 }
 
 void rotateWallpapers(HWND window, WindowState& state)
@@ -139,8 +145,11 @@ void updateSelection(HWND window, WindowState& state, LRESULT index)
     const auto* selection = index == LB_ERR ? nullptr : &state.selections[static_cast<size_t>(index)];
     const bool hasFolder = selection && !selection->folder.empty();
     SetDlgItemTextW(window, folderPathId, hasFolder ? selection->folder.c_str() : L"Aucun dossier sélectionné");
+    SetDlgItemTextW(window, imagePathId, selection && !selection->uniqueImage.empty()
+        ? selection->uniqueImage.c_str() : L"Aucune image sélectionnée");
     SetDlgItemTextW(window, statusId, L"");
     EnableWindow(GetDlgItem(window, chooseFolderId), selection != nullptr);
+    EnableWindow(GetDlgItem(window, chooseImageId), selection != nullptr);
     EnableWindow(GetDlgItem(window, changeWallpaperId), hasFolder);
     EnableWindow(GetDlgItem(window, participationId), selection != nullptr);
     CheckDlgButton(window, participationId, selection && selection->participates ? BST_CHECKED : BST_UNCHECKED);
@@ -188,9 +197,9 @@ void handleCommand(HWND window, WindowState& state, WPARAM command)
             return;
         }
         const auto fit = choice == 1 ? PortraitFit::Width : PortraitFit::Height;
-        if (!selection.lastImage.empty() && fit != selection.fit) {
+        if (!selection.currentImage().empty() && fit != selection.fit) {
             const HRESULT result = applyWallpaper(*state.wallpaper.Get(), *state.imaging.Get(),
-                state.monitors[static_cast<size_t>(index)], fit, state.cache, selection.lastImage);
+                monitor, fit, state.cache, selection.currentImage());
             if (FAILED(result)) {
                 updateSelection(window, state, index);
                 showError(window, L"Impossible d’ajuster le fond de cet écran.", result);
@@ -201,9 +210,9 @@ void handleCommand(HWND window, WindowState& state, WPARAM command)
         next.fit = fit;
         const HRESULT result = state.settings.saveMonitor(monitor, next);
         if (FAILED(result)) {
-            if (!selection.lastImage.empty() && fit != selection.fit &&
+            if (!selection.currentImage().empty() && fit != selection.fit &&
                 FAILED(applyWallpaper(*state.wallpaper.Get(), *state.imaging.Get(), monitor,
-                                      selection.fit, state.cache, selection.lastImage))) {
+                                      selection.fit, state.cache, selection.currentImage()))) {
                 OutputDebugStringW(L"Impossible de rétablir l’ajustement précédent.\n");
             }
             updateSelection(window, state, index);
@@ -238,6 +247,29 @@ void handleCommand(HWND window, WindowState& state, WPARAM command)
             selection = std::move(next);
             updateSelection(window, state, index);
         }
+    } else if (id == chooseImageId && notification == BN_CLICKED) {
+        std::filesystem::path image;
+        HRESULT result = pickImage(window, image);
+        if (result == S_FALSE) {
+            return;
+        }
+        if (SUCCEEDED(result)) {
+            result = applyWallpaper(*state.wallpaper.Get(), *state.imaging.Get(),
+                                    monitor, selection.fit, state.cache, image);
+        }
+        if (FAILED(result)) {
+            showError(window, L"Impossible d’appliquer l’image à cet écran.", result);
+            return;
+        }
+        selection.uniqueImage = std::move(image);
+        selection.uniqueActive = true;
+        updateSelection(window, state, index);
+        result = state.settings.saveMonitor(monitor, selection);
+        if (FAILED(result)) {
+            showError(window, L"Impossible d’enregistrer le choix de l’image.", result);
+        } else {
+            SetDlgItemTextW(window, statusId, L"Image appliquée à l’écran sélectionné.");
+        }
     } else if (id == changeWallpaperId && notification == BN_CLICKED && !selection.folder.empty()) {
         SetDlgItemTextW(window, statusId, L"");
         const HRESULT result = advanceWallpaper(state, static_cast<size_t>(index));
@@ -260,33 +292,40 @@ LRESULT CALLBACK windowProcedure(HWND window, UINT message, WPARAM key, LPARAM d
         SetWindowLongPtrW(window, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(&state));
         HWND label = createControl(window, L"STATIC", L"Écrans connectés", 0, 16, 16, 540, 22);
         HWND list = createControl(window, L"LISTBOX", L"", WS_BORDER | WS_VSCROLL |
-            WS_TABSTOP | LBS_NOINTEGRALHEIGHT | LBS_NOTIFY, 16, 42, 540, 100, monitorListId);
-        HWND fit = createControl(window, L"COMBOBOX", L"", WS_TABSTOP | CBS_DROPDOWNLIST,
-            206, 253, 236, 120, fitId);
-        if (!label || !list || !fit ||
-            !createControl(window, L"STATIC", L"Dossier de l’écran sélectionné", 0, 16, 154, 540, 20) ||
+            WS_TABSTOP | LBS_NOINTEGRALHEIGHT | LBS_NOTIFY, 16, 40, 540, 60, monitorListId);
+        if (!label || !list ||
+            !createControl(window, L"BUTTON", L"Rotation", BS_GROUPBOX, 16, 112, 540, 148) ||
             !createControl(window, L"EDIT", L"", WS_BORDER | WS_TABSTOP | ES_READONLY | ES_AUTOHSCROLL,
-                16, 176, 540, 24, folderPathId) ||
+                30, 136, 512, 24, folderPathId) ||
             !createControl(window, L"BUTTON", L"Choisir un dossier…", WS_TABSTOP,
-                16, 212, 178, 30, chooseFolderId) ||
-            !createControl(window, L"BUTTON", L"Changer le fond", WS_TABSTOP,
-                206, 212, 160, 30, changeWallpaperId) ||
-            !createControl(window, L"STATIC", L"Ajustement du fond", 0, 16, 257, 180, 24) ||
+                30, 168, 156, 26, chooseFolderId) ||
+            !createControl(window, L"BUTTON", L"Image suivante", WS_TABSTOP,
+                194, 168, 130, 26, changeWallpaperId) ||
             !createControl(window, L"BUTTON", L"Faire participer cet écran à la rotation",
-                WS_TABSTOP | BS_AUTOCHECKBOX, 16, 290, 380, 24, participationId) ||
+                WS_TABSTOP | BS_AUTOCHECKBOX, 30, 198, 380, 22, participationId) ||
             !createControl(window, L"BUTTON", L"Activer la rotation générale",
-                WS_TABSTOP | BS_AUTOCHECKBOX, 16, 332, 250, 24, rotationId) ||
-            !createControl(window, L"STATIC", L"Intervalle (minutes)", 0, 270, 336, 125, 20) ||
+                WS_TABSTOP | BS_AUTOCHECKBOX, 30, 226, 235, 24, rotationId) ||
+            !createControl(window, L"STATIC", L"Intervalle (minutes)", 0, 270, 230, 115, 20) ||
             !createControl(window, L"EDIT", L"", WS_BORDER | WS_TABSTOP | ES_NUMBER | ES_AUTOHSCROLL,
-                398, 332, 64, 24, minutesId) ||
+                387, 226, 58, 24, minutesId) ||
             !createControl(window, L"BUTTON", L"Appliquer", WS_TABSTOP,
-                470, 330, 86, 28, applyRotationId) ||
+                456, 225, 86, 26, applyRotationId) ||
+            !createControl(window, L"BUTTON", L"Unique", BS_GROUPBOX, 16, 269, 540, 65) ||
+            !createControl(window, L"EDIT", L"", WS_BORDER | WS_TABSTOP | ES_READONLY | ES_AUTOHSCROLL,
+                30, 295, 350, 24, imagePathId) ||
+            !createControl(window, L"BUTTON", L"Choisir une image…", WS_TABSTOP,
+                389, 294, 153, 26, chooseImageId) ||
+            !createControl(window, L"BUTTON", L"Générale", BS_GROUPBOX, 16, 343, 540, 88) ||
+            !createControl(window, L"STATIC", L"Ajustement du fond", 0, 30, 372, 180, 20) ||
+            !createControl(window, L"COMBOBOX", L"", WS_TABSTOP | CBS_DROPDOWNLIST,
+                210, 367, 235, 120, fitId) ||
             !createControl(window, L"BUTTON", L"Lancer Plop-Wallpaper à l’ouverture de session",
-                WS_TABSTOP | BS_AUTOCHECKBOX, 16, 370, 540, 24, startupId) ||
-            !createControl(window, L"STATIC", L"", 0, 16, 405, 540, 42, statusId)) {
+                WS_TABSTOP | BS_AUTOCHECKBOX, 30, 399, 512, 24, startupId) ||
+            !createControl(window, L"STATIC", L"", 0, 16, 442, 540, 38, statusId)) {
             SetLastError(ERROR_CANNOT_MAKE);
             return -1;
         }
+        const HWND fit = GetDlgItem(window, fitId);
         for (PCWSTR mode : {L"Étirer", L"Ajuster à la largeur", L"Ajuster à la hauteur"}) {
             if (SendMessageW(fit, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(mode)) < 0) {
                 SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -378,7 +417,7 @@ int run(HINSTANCE instance, int show)
     }
 
     constexpr DWORD style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
-    RECT size{0, 0, 572, 461};
+    RECT size{0, 0, 572, 487};
     AdjustWindowRect(&size, style, FALSE);
     HWND window = CreateWindowW(appName, appName, style, CW_USEDEFAULT, CW_USEDEFAULT,
                                 size.right - size.left, size.bottom - size.top,

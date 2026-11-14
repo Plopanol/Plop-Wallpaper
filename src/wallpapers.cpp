@@ -170,7 +170,9 @@ void removeCachedImage(const fs::path& path)
 
 }
 
-HRESULT pickFolder(HWND owner, fs::path& folder)
+namespace {
+
+HRESULT pickPath(HWND owner, fs::path& path, bool folders)
 {
     ComPtr<IFileOpenDialog> dialog;
     HRESULT result = CoCreateInstance(CLSID_FileOpenDialog, nullptr, CLSCTX_INPROC_SERVER,
@@ -183,9 +185,17 @@ HRESULT pickFolder(HWND owner, fs::path& folder)
     if (FAILED(result)) {
         return result;
     }
-    result = dialog->SetOptions(options | FOS_PICKFOLDERS | FOS_FORCEFILESYSTEM | FOS_PATHMUSTEXIST);
+    result = dialog->SetOptions(options | FOS_FORCEFILESYSTEM | FOS_PATHMUSTEXIST |
+                                (folders ? FOS_PICKFOLDERS : FOS_FILEMUSTEXIST));
     if (FAILED(result)) {
         return result;
+    }
+    if (!folders) {
+        const COMDLG_FILTERSPEC filter{L"Images (JPG, JPEG, PNG, BMP)", L"*.jpg;*.jpeg;*.png;*.bmp"};
+        result = dialog->SetFileTypes(1, &filter);
+        if (FAILED(result)) {
+            return result;
+        }
     }
     result = dialog->Show(owner);
     if (result == HRESULT_FROM_WIN32(ERROR_CANCELLED)) {
@@ -201,11 +211,26 @@ HRESULT pickFolder(HWND owner, fs::path& folder)
     }
     PWSTR rawPath = nullptr;
     result = item->GetDisplayName(SIGDN_FILESYSPATH, &rawPath);
-    std::unique_ptr<wchar_t, decltype(&CoTaskMemFree)> path(rawPath, CoTaskMemFree);
+    std::unique_ptr<wchar_t, decltype(&CoTaskMemFree)> selected(rawPath, CoTaskMemFree);
     if (SUCCEEDED(result)) {
-        folder = path.get();
+        path = selected.get();
+        if (!folders && !isSupported(path)) {
+            return HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED);
+        }
     }
     return result;
+}
+
+}
+
+HRESULT pickFolder(HWND owner, fs::path& folder)
+{
+    return pickPath(owner, folder, true);
+}
+
+HRESULT pickImage(HWND owner, fs::path& image)
+{
+    return pickPath(owner, image, false);
 }
 
 HRESULT applyWallpaper(IDesktopWallpaper& wallpaper, IWICImagingFactory& imaging,
