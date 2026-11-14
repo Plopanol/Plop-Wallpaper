@@ -22,4 +22,4 @@ Non exécutée.
 
 ## Obstacles et reprise
 
-Commencer par confirmer la chaîne de compilation dans [Q-001](../QUESTIONS.md#q-001).
+Utiliser la [chaîne de compilation validée](../adr/ADR-001-chaine-msvc.md).

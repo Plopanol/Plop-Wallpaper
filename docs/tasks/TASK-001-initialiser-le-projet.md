@@ -25,4 +25,4 @@ Installer le socle Plop v6 et documenter le produit, l’architecture, les conve
 
 ## Obstacles et reprise
 
-La [question de compilation](../QUESTIONS.md#q-001) concerne TASK-002.
+La question Q-001 sur la compilation de TASK-002 a été résolue par [ADR-001](../adr/ADR-001-chaine-msvc.md).

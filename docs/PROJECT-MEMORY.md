@@ -4,7 +4,7 @@ Carte d’orientation. Les documents référencés font autorité.
 
 ## État courant
 
-- Stade de cadrage. La chaîne de compilation fait l’objet d’une [question ouverte](QUESTIONS.md#q-001).
+- Stade de cadrage. La [chaîne de compilation](adr/ADR-001-chaine-msvc.md) a été validée sur un exécutable de test.
 - Version dans [VERSION](../VERSION).
 - Livrables disponibles : aucun.
 
