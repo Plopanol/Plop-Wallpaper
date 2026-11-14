@@ -7,13 +7,13 @@ description: Enregistre une anomalie en fiche BUG-XXX avec sa ligne d'index, pui
 
 Lire `docs/bugs/WORKFLOW.md`, qui précise le cycle pour le projet, la vérification rapide et le contrôle complet dans `## Commandes et contrôles` d'`AGENTS.md`, et les particularités dans `AGENTS.md`, qui prévaut sur ce skill. Les bugs restent distincts des tâches et ne réordonnent pas la roadmap, sauf dépendance décidée explicitement.
 
-Cycle : `Signalé → Confirmé → En cours → Corrigé à vérifier → Clos`, avec `Bloqué`, `Doublon` ou `Rejeté` si justifié. Chaque changement de statut met à jour la fiche et l'index dans le même changement, parce que la fiche fait foi.
+Cycle : `Signalé → Confirmé → En cours → Corrigé à vérifier → Clos`, avec `Bloqué`, `Doublon` ou `Rejeté` si justifié. À chaque changement de statut, modifier la fiche puis régénérer l’index avec la même commande. Vérifier le diff de l’index et inclure les deux fichiers dans le même changement, parce que la fiche fait foi.
 
 ## Signaler
 
 1. Prendre le `Prochain identifiant libre` de `docs/bugs/INDEX.md` et l'incrémenter ; ne jamais réutiliser un identifiant.
 2. Créer `docs/bugs/BUG-XXX-description.md` depuis le gabarit `docs/bugs/BUG-XXX.md` du projet, statut `Signalé`, même sans cause connue. Aucune donnée sensible, parce que la fiche est versionnée.
-3. Ajouter la ligne dans la section `Actifs` de l'index, puis commit documentaire `docs(bugs): signale BUG-XXX`, dispensé de la vérification rapide du code (le hook pre-commit lance Test-Docs).
+3. Depuis la racine du projet, lancer `node tools/commun/check_docs.mjs --fix` en adaptant le chemin au dossier d'outillage déclaré. Vérifier dans le diff que la fiche apparaît sous `Actifs`, puis faire le commit documentaire `docs(bugs): signale BUG-XXX`, dispensé de la vérification rapide du code (le hook pre-commit lance Test-Docs).
 
 ## Confirmer et corriger
 
@@ -28,7 +28,7 @@ Cycle : `Signalé → Confirmé → En cours → Corrigé à vérifier → Clos`
 
 1. `Clos` exige une vérification distincte sur l'application reconstruite depuis la branche principale, datée dans la fiche ; un comportement visible se fait vérifier par l'utilisateur. `Corrigé à vérifier` n'est jamais `Clos`.
 2. Un défaut conservé volontairement passe à `Clos` avec un lien vers son entrée de `docs/DETTE.md` ; un doublon passe à `Doublon` avec un lien vers la fiche d'origine ; `Rejeté` porte sa justification.
-3. Déplacer la ligne dans la section `Fermés` ; la fiche reste à son chemin. Commit `docs(bugs): …`.
+3. Vérifier que la régénération a déplacé la ligne dans la section `Fermés`. Commit `docs(bugs): …`.
 4. Un défaut qui persiste rouvre la même fiche, sans nouvel identifiant.
 
 Rapport : identifiant, statut, fichiers, contrôles réussis, échoués et non exécutés, commit.

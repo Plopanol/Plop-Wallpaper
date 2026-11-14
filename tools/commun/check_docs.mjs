@@ -194,6 +194,22 @@ function locateSections(lines, masked, layout) {
 
 const targetOf = (layout, status) => layout.sections?.find(section => section.statuses.includes(status));
 
+function detachedBugRows(lines, masked, rows, sections, layout) {
+  if (layout.prefix !== 'BUG') return [];
+  const rowIndexes = new Set(rows.map(row => row.index));
+  return rows.flatMap(row => {
+    const section = sections.find(candidate => candidate.def.title === row.section && !candidate.missing);
+    if (!section) return [];
+    let previous = row.index - 1;
+    while (previous >= section.start && !masked[previous] && lines[previous].trim() === '') previous--;
+    if (previous === row.index - 1 || previous < section.start || masked[previous]) return [];
+    const afterHeader = previous > section.start && !masked[previous - 1]
+      && /^\|\s*ID\s*\|/.test(lines[previous - 1])
+      && /^\|(?:\s*:?-+:?\s*\|)+\s*$/.test(lines[previous]);
+    return rowIndexes.has(previous) || afterHeader ? [{ row, start: previous + 1 }] : [];
+  });
+}
+
 // --- Analysis --------------------------------------------------------------------------------------------
 const maxId = ids => ids.reduce((maximum, id) => Math.max(maximum, Number(id)), 0);
 
@@ -219,6 +235,9 @@ function analyzeRegister(root, layout) {
   const masked = maskLines(lines);
   const rows = parseRows(lines, masked, layout.prefix);
   const sections = locateSections(lines, masked, layout);
+  for (const { row } of detachedBugRows(lines, masked, rows, sections, layout)) {
+    errors.push(indexFile + ':' + (row.index + 1) + ' : BUG-' + row.id + ' séparé du tableau par une ligne vide');
+  }
   const column = statusColumn(lines, masked);
   const byId = new Map(fiches.map(fiche => [fiche.id, fiche]));
   const indexDir = path.posix.dirname(indexFile);
@@ -405,6 +424,10 @@ export function fixRegister(text, layout, fiches, profile) {
     }
   }
 
+  const detachedBlanks = new Set();
+  for (const { row, start } of detachedBugRows(lines, masked, rows, sections, layout)) {
+    for (let i = start; i < row.index; i++) detachedBlanks.add(i);
+  }
   const result = lines.slice();
   for (const section of sections.filter(candidate => !candidate.missing).reverse()) {
     const newRows = placed.get(section).map(entry => entry.line);
@@ -414,7 +437,12 @@ export function fixRegister(text, layout, fiches, profile) {
     const originalRows = body.filter((line, i) => !bodyMask[i] && rowPattern(layout.prefix).test(line));
     const hasPlaceholder = body.some((line, i) => !bodyMask[i] && PLACEHOLDER.test(line));
     const hasDropped = body.some((line, i) => dropped.has(section.start + i));
-    if (sameList(newRows, originalRows) && !(newRows.length > 0 && hasPlaceholder) && !hasDropped) continue;
+    if (sameList(newRows, originalRows) && !(newRows.length > 0 && hasPlaceholder) && !hasDropped) {
+      for (let i = section.end - 1; i >= section.start; i--) {
+        if (detachedBlanks.has(i)) result.splice(i, 1);
+      }
+      continue;
+    }
     const first = body.findIndex(isRow);
     const last = body.map(isRow).lastIndexOf(true);
     const keep = (line, i) => bodyMask[i] || !PLACEHOLDER.test(line);
