@@ -8,7 +8,9 @@ Permettre à une personne utilisant deux écrans sous Windows 11 de gérer leurs
 
 - Détecter les écrans connectés et afficher leur nom, leur résolution et leur orientation. Conserver les associations de dossiers lors d’une réorganisation et d’une reconnexion.
 - Utiliser un dossier indépendant par moniteur et accepter JPG, JPEG, PNG et BMP. Ignorer les images corrompues et gérer les dossiers vides ou inaccessibles.
+- Proposer l’étirement du fond à la résolution de l’écran paysage et, sur l’écran portrait, son ajustement proportionnel à la largeur ou à la hauteur.
 - Proposer les actions Précédent selon l’historique et Suivant, une rotation séquentielle ou aléatoire sans répétition immédiate quand plusieurs images sont disponibles, et une activation par écran. Prévoir les intervalles de 1, 5, 10, 15, 30 et 60 minutes ainsi qu’une durée personnalisée en minutes.
+- Proposer un réglage général en minutes pour appliquer une cadence commune aux écrans participant à la rotation.
 - Proposer une fenêtre Win32, la pause générale, le démarrage automatique avec Windows en option et les préférences de démarrage et de réduction dans la zone de notification. L’icône permet d’ouvrir l’application, de changer le fond d’un écran ou des deux, de suspendre les rotations et de quitter.
 - Rétablir les préférences au redémarrage et gérer la veille, le verrouillage de session, la reconnexion d’un écran et le redémarrage d’Explorer. L’application fonctionne avec des droits utilisateur et une seule instance.
 

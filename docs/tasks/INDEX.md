@@ -1,10 +1,12 @@
 # Index des tâches
 
-La fiche fait foi pour le statut. La [roadmap](../03-ROADMAP.md) porte la prochaine tâche. Prochain identifiant libre : TASK-003.
+La fiche fait foi pour le statut. La [roadmap](../03-ROADMAP.md) porte la prochaine tâche. Prochain identifiant libre : TASK-004.
 
 ## Actives
 
-Aucune.
+| ID | Titre | Statut | Phase | Priorité |
+|---|---|---|---|---|
+| [TASK-003](TASK-003-configurer-les-fonds-et-le-demarrage.md) | Configurer les fonds et le démarrage | En cours | Phase 2 — Rotation indépendante | Normale |
 
 ## À faire
 

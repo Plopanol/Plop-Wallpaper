@@ -22,6 +22,10 @@ Jalon : chacun des deux écrans reçoit manuellement une image de son dossier.
 
 Timers Win32 par moniteur, intervalles, séquences, historique et pause.
 
+| Ordre | Livrable | Dépendances |
+|---|---|---|
+| [TASK-003](tasks/TASK-003-configurer-les-fonds-et-le-demarrage.md) | Ajustement des images, cadence générale de rotation et lancement avec Windows | TASK-002 |
+
 Jalon : deux écrans changent de fond à des intervalles distincts.
 
 ## Phase 3 — Interface et zone de notification
@@ -44,4 +48,4 @@ Jalon : les mesures sont consignées et la procédure de production du paquet es
 
 ## Prochaine tâche
 
-Aucune tâche planifiée.
+[TASK-003 — Configurer les fonds et le démarrage](tasks/TASK-003-configurer-les-fonds-et-le-demarrage.md)
