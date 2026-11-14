@@ -1,10 +1,12 @@
 # Index des tâches
 
-La fiche fait foi pour le statut. La [roadmap](../03-ROADMAP.md) porte la prochaine tâche. Prochain identifiant libre : TASK-006.
+La fiche fait foi pour le statut. La [roadmap](../03-ROADMAP.md) porte la prochaine tâche. Prochain identifiant libre : TASK-007.
 
 ## Actives
 
-Aucune.
+| ID | Titre | Statut | Phase | Priorité |
+|---|---|---|---|---|
+| [TASK-006](TASK-006-preparer-la-publication.md) | Préparer la publication | En cours | Phase 4 — Persistance et événements Windows | Haute |
 
 ## À faire
 
