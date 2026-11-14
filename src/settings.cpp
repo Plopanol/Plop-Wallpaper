@@ -64,6 +64,7 @@ RotationSettings Settings::loadRotation() const
         value.minutes = minutes;
     }
     value.enabled = GetPrivateProfileIntW(L"Rotation", L"Enabled", 0, path_.c_str()) == 1;
+    value.random = GetPrivateProfileIntW(L"Rotation", L"Random", 0, path_.c_str()) == 1;
     return value;
 }
 
@@ -84,6 +85,7 @@ HRESULT Settings::saveRotation(const RotationSettings& value) const
     std::wstring fields;
     appendField(fields, L"Minutes", std::to_wstring(value.minutes).c_str());
     appendField(fields, L"Enabled", value.enabled ? L"1" : L"0");
+    appendField(fields, L"Random", value.random ? L"1" : L"0");
     return save(L"Rotation", std::move(fields));
 }
 

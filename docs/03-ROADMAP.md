@@ -53,4 +53,4 @@ Jalon : les mesures sont consignées et la procédure de production du paquet es
 
 ## Prochaine tâche
 
-[TASK-005 — Réduire en notification et varier la rotation](tasks/TASK-005-notification-et-rotation.md)
+Aucune tâche planifiée.

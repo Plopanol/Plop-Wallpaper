@@ -288,7 +288,8 @@ HRESULT applyWallpaper(IDesktopWallpaper& wallpaper, IWICImagingFactory& imaging
 
 HRESULT changeWallpaper(IDesktopWallpaper& wallpaper, IWICImagingFactory& imaging,
                         const Monitor& monitor, PortraitFit fit, const fs::path& cache,
-                        const fs::path& folder, fs::path& lastImage)
+                        const fs::path& folder, fs::path& lastImage,
+                        const fs::path& currentImage, std::mt19937* random)
 {
     std::vector<fs::path> images;
     std::error_code error;
@@ -311,8 +312,21 @@ HRESULT changeWallpaper(IDesktopWallpaper& wallpaper, IWICImagingFactory& imagin
         return S_FALSE;
     }
 
-    std::ranges::sort(images);
-    auto next = std::ranges::upper_bound(images, lastImage);
+    auto next = images.begin();
+    if (random) {
+        auto shuffleEnd = images.end();
+        const auto current = std::ranges::find_if(images, [&](const fs::path& image) {
+            return CompareStringOrdinal(image.c_str(), -1, currentImage.c_str(), -1, TRUE) == CSTR_EQUAL;
+        });
+        if (current != images.end()) {
+            // Keep the current image as a fallback when no alternative can be decoded.
+            std::iter_swap(current, --shuffleEnd);
+        }
+        std::shuffle(images.begin(), shuffleEnd, *random);
+    } else {
+        std::ranges::sort(images);
+        next = std::ranges::upper_bound(images, lastImage);
+    }
     for (size_t tried = 0; tried < images.size(); ++tried, ++next) {
         if (next == images.end()) {
             next = images.begin();

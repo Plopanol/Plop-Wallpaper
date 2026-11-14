@@ -1,6 +1,6 @@
 # TASK-005 — Réduire en notification et varier la rotation
 
-- **Statut :** En cours
+- **Statut :** À valider
 - **Phase :** Phase 3 — Interface et zone de notification
 - **Priorité :** Normale
 - **Dépendances :** TASK-004
@@ -17,12 +17,17 @@
 | Lot | Contenu | Préconditions | Contrôles | État |
 |---|---|---|---|---|
 | 1 | Réduction, restauration et rotation depuis l’icône | TASK-004 | Compilation, documentation, essai manuel | À valider |
-| 2 | Ordre aléatoire et persistance du réglage | Aucune | Compilation, documentation, essai manuel | En cours |
+| 2 | Ordre aléatoire et persistance du réglage | Aucune | Compilation, documentation, essai manuel | À valider |
 
 ## Journal des lots
 
-- 2026-11-14 — Lot 1. Réduction, menu et rotation depuis l’icône implémentés. Test-Docs réussi. Essai manuel prévu après le lot 2.
+- 2026-11-14 — Lot 1. Réduction, menu et rotation depuis l’icône implémentés dans le commit `1548927`.
+- 2026-11-14 — Lot 2. Ordre aléatoire partagé par le bouton, le minuteur et le clic sur l’icône. Réglage enregistré dans l’INI.
 
 ## Validation et preuves
 
-Non exécutée.
+- 2026-11-14 — Windows x64, MSVC. `cmake --build build --config Debug` réussi sans avertissement pour les deux lots après reconstruction séquentielle du lot 1.
+- 2026-11-14 — Test-Docs et `git diff --check` réussis.
+- À exécuter sur Windows 11 avec deux écrans. Configurer deux dossiers, laisser un seul écran participant et activer la rotation. Réduire la fenêtre et vérifier son retrait de la barre des tâches. Cliquer sur l’icône et vérifier que seul l’écran participant change. Redémarrer Explorer pendant que la fenêtre est masquée et vérifier le retour de l’icône. Utiliser le clic droit pour rouvrir la fenêtre.
+- Cocher **Aléatoire**, cliquer sur **Appliquer**, puis vérifier les changements au clic et au minuteur avec au moins trois images lisibles. Vérifier que la même image ne s’affiche pas deux fois de suite et que la case reste cochée après **Quitter** puis relance. Désactiver la rotation et vérifier qu’un clic rouvre la fenêtre.
+- Contrôle complet, version et fusion en attente du retour de l’essai manuel.

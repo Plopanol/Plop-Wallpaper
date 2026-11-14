@@ -20,6 +20,7 @@ struct RotationSettings {
     static constexpr UINT maxMinutes = USER_TIMER_MAXIMUM / 60000;
     UINT minutes = 5;
     bool enabled = false;
+    bool random = false;
 };
 
 class Settings {

@@ -24,6 +24,7 @@ constexpr int applyRotationId = 109;
 constexpr int startupId = 110;
 constexpr int chooseImageId = 111;
 constexpr int imagePathId = 112;
+constexpr int randomId = 113;
 constexpr UINT_PTR rotationTimer = 1;
 constexpr UINT trayMessage = WM_APP + 1;
 constexpr UINT trayIconId = 1;
@@ -68,6 +69,7 @@ struct WindowState {
     std::filesystem::path cache;
     Settings settings;
     RotationSettings rotation;
+    std::mt19937 rotationRandom{std::random_device{}()};
     WindowTheme theme;
     std::vector<MonitorSettings> selections;
     UINT taskbarCreated = 0;
@@ -143,6 +145,7 @@ void showTrayMenu(HWND window, WindowState& state, int x, int y)
 void showRotationSettings(HWND window, const RotationSettings& rotation)
 {
     CheckDlgButton(window, rotationId, rotation.enabled ? BST_CHECKED : BST_UNCHECKED);
+    CheckDlgButton(window, randomId, rotation.random ? BST_CHECKED : BST_UNCHECKED);
     SetDlgItemInt(window, minutesId, rotation.minutes, FALSE);
 }
 
@@ -169,7 +172,8 @@ void applyRotationSettings(HWND window, WindowState& state)
         SetFocus(GetDlgItem(window, minutesId));
         return;
     }
-    const RotationSettings next{minutes, IsDlgButtonChecked(window, rotationId) == BST_CHECKED};
+    const RotationSettings next{minutes, IsDlgButtonChecked(window, rotationId) == BST_CHECKED,
+        IsDlgButtonChecked(window, randomId) == BST_CHECKED};
     HRESULT result = scheduleRotation(window, next);
     if (SUCCEEDED(result)) {
         result = state.settings.saveRotation(next);
@@ -192,7 +196,8 @@ HRESULT advanceWallpaper(WindowState& state, size_t index)
     auto& selection = state.selections[index];
     const auto& monitor = state.monitors[index];
     const HRESULT result = changeWallpaper(*state.wallpaper.Get(), *state.imaging.Get(),
-        monitor, selection.fit, state.cache, selection.folder, selection.lastImage);
+        monitor, selection.fit, state.cache, selection.folder, selection.lastImage,
+        selection.currentImage(), state.rotation.random ? &state.rotationRandom : nullptr);
     if (result != S_OK) {
         return result;
     }
@@ -379,7 +384,7 @@ LRESULT CALLBACK windowProcedure(HWND window, UINT message, WPARAM key, LPARAM d
         HWND list = createControl(window, L"LISTBOX", L"", WS_BORDER | WS_VSCROLL |
             WS_TABSTOP | LBS_NOINTEGRALHEIGHT | LBS_NOTIFY, 16, 40, 540, 60, monitorListId);
         if (!label || !list ||
-            !createControl(window, L"BUTTON", L"Rotation", BS_GROUPBOX, 16, 112, 540, 148) ||
+            !createControl(window, L"BUTTON", L"Rotation", BS_GROUPBOX, 16, 112, 540, 176) ||
             !createControl(window, L"EDIT", L"", WS_BORDER | WS_TABSTOP | ES_READONLY | ES_AUTOHSCROLL,
                 30, 136, 512, 24, folderPathId) ||
             !createControl(window, L"BUTTON", L"Choisir un dossier…", WS_TABSTOP,
@@ -390,23 +395,25 @@ LRESULT CALLBACK windowProcedure(HWND window, UINT message, WPARAM key, LPARAM d
                 WS_TABSTOP | BS_AUTOCHECKBOX, 30, 198, 380, 22, participationId) ||
             !createControl(window, L"BUTTON", L"Activer la rotation générale",
                 WS_TABSTOP | BS_AUTOCHECKBOX, 30, 226, 235, 24, rotationId) ||
-            !createControl(window, L"STATIC", L"Intervalle (minutes)", 0, 270, 230, 115, 20) ||
+            !createControl(window, L"BUTTON", L"Aléatoire",
+                WS_TABSTOP | BS_AUTOCHECKBOX, 30, 254, 235, 24, randomId) ||
+            !createControl(window, L"STATIC", L"Intervalle (minutes)", 0, 270, 258, 115, 20) ||
             !createControl(window, L"EDIT", L"", WS_BORDER | WS_TABSTOP | ES_NUMBER | ES_AUTOHSCROLL,
-                387, 226, 58, 24, minutesId) ||
+                387, 254, 58, 24, minutesId) ||
             !createControl(window, L"BUTTON", L"Appliquer", WS_TABSTOP,
-                456, 225, 86, 26, applyRotationId) ||
-            !createControl(window, L"BUTTON", L"Unique", BS_GROUPBOX, 16, 269, 540, 65) ||
+                456, 253, 86, 26, applyRotationId) ||
+            !createControl(window, L"BUTTON", L"Unique", BS_GROUPBOX, 16, 297, 540, 65) ||
             !createControl(window, L"EDIT", L"", WS_BORDER | WS_TABSTOP | ES_READONLY | ES_AUTOHSCROLL,
-                30, 295, 350, 24, imagePathId) ||
+                30, 323, 350, 24, imagePathId) ||
             !createControl(window, L"BUTTON", L"Choisir une image…", WS_TABSTOP,
-                389, 294, 153, 26, chooseImageId) ||
-            !createControl(window, L"BUTTON", L"Générale", BS_GROUPBOX, 16, 343, 540, 88) ||
-            !createControl(window, L"STATIC", L"Ajustement du fond", 0, 30, 372, 180, 20) ||
+                389, 322, 153, 26, chooseImageId) ||
+            !createControl(window, L"BUTTON", L"Générale", BS_GROUPBOX, 16, 371, 540, 88) ||
+            !createControl(window, L"STATIC", L"Ajustement du fond", 0, 30, 400, 180, 20) ||
             !createControl(window, L"COMBOBOX", L"", WS_TABSTOP | CBS_DROPDOWNLIST,
-                210, 367, 235, 120, fitId) ||
+                210, 395, 235, 120, fitId) ||
             !createControl(window, L"BUTTON", L"Lancer Plop-Wallpaper à l’ouverture de session",
-                WS_TABSTOP | BS_AUTOCHECKBOX, 30, 399, 512, 24, startupId) ||
-            !createControl(window, L"STATIC", L"", 0, 16, 442, 540, 38, statusId)) {
+                WS_TABSTOP | BS_AUTOCHECKBOX, 30, 427, 512, 24, startupId) ||
+            !createControl(window, L"STATIC", L"", 0, 16, 470, 540, 38, statusId)) {
             SetLastError(ERROR_CANNOT_MAKE);
             return -1;
         }
@@ -557,7 +564,7 @@ int run(HINSTANCE instance, int show)
     }
 
     constexpr DWORD style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
-    RECT size{0, 0, 572, 487};
+    RECT size{0, 0, 572, 515};
     AdjustWindowRect(&size, style, FALSE);
     HWND window = CreateWindowW(appName, appName, style, CW_USEDEFAULT, CW_USEDEFAULT,
                                 size.right - size.left, size.bottom - size.top,
