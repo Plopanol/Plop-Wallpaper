@@ -23,13 +23,13 @@ try {
     New-Item -ItemType Directory -Path $stage | Out-Null
     $archive = Join-Path $stage $name
     try {
-        $files = @("$build/Release/PlopWallpaper.exe", 'docs/config.example.ini', 'CHANGELOG.md')
+        $files = @("$build/Release/PlopWallpaper.exe", 'docs/config.example.ini', 'CHANGELOG.md', 'LICENSE')
         Compress-Archive -LiteralPath $files -DestinationPath $archive
         $hash = (Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash.ToLowerInvariant()
         Set-Content -LiteralPath "$archive.sha256" -Value "$hash  $name" -Encoding ascii
 
         & ./tools/commun/Verify-Livrable.ps1 -Path $archive -Project 'Plop-Wallpaper' -Version $version `
-            -Expected 'PlopWallpaper.exe', 'config.example.ini', 'CHANGELOG.md' -NoNotices
+            -Expected 'PlopWallpaper.exe', 'config.example.ini', 'CHANGELOG.md', 'LICENSE' -NoNotices
         if ($LASTEXITCODE -ne 0) { throw 'La vérification du paquet a échoué.' }
 
         New-Item -ItemType Directory -Path 'livrable' -Force | Out-Null
