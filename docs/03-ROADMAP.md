@@ -35,6 +35,7 @@ Interface de configuration et commandes en arrière-plan, avec restauration de l
 | Ordre | Livrable | Dépendances |
 |---|---|---|
 | [TASK-004](tasks/TASK-004-organiser-et-thematiser-interface.md) | Rubriques, image par écran et thème Windows | TASK-003 |
+| [TASK-005](tasks/TASK-005-notification-et-rotation.md) | Réduction dans la zone de notification et ordre de rotation aléatoire | TASK-004 |
 
 Jalon : les rotations continuent lorsque la fenêtre est masquée.
 
@@ -52,4 +53,4 @@ Jalon : les mesures sont consignées et la procédure de production du paquet es
 
 ## Prochaine tâche
 
-Aucune tâche planifiée.
+[TASK-005 — Réduire en notification et varier la rotation](tasks/TASK-005-notification-et-rotation.md)

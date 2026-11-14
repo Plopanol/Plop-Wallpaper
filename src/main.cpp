@@ -2,6 +2,8 @@
 #include "startup.h"
 #include "theme.h"
 
+#include <shellapi.h>
+#include <windowsx.h>
 #include <wrl/client.h>
 
 using Microsoft::WRL::ComPtr;
@@ -23,6 +25,8 @@ constexpr int startupId = 110;
 constexpr int chooseImageId = 111;
 constexpr int imagePathId = 112;
 constexpr UINT_PTR rotationTimer = 1;
+constexpr UINT trayMessage = WM_APP + 1;
+constexpr UINT trayIconId = 1;
 
 void showError(HWND owner, PCWSTR message, HRESULT result)
 {
@@ -66,7 +70,75 @@ struct WindowState {
     RotationSettings rotation;
     WindowTheme theme;
     std::vector<MonitorSettings> selections;
+    UINT taskbarCreated = 0;
+    bool inTray = false;
 };
+
+NOTIFYICONDATAW trayIcon(HWND window)
+{
+    NOTIFYICONDATAW icon{};
+    icon.cbSize = sizeof(icon);
+    icon.hWnd = window;
+    icon.uID = trayIconId;
+    return icon;
+}
+
+bool addTrayIcon(HWND window)
+{
+    auto icon = trayIcon(window);
+    icon.uFlags = NIF_MESSAGE | NIF_ICON | NIF_TIP | NIF_SHOWTIP;
+    icon.uCallbackMessage = trayMessage;
+    icon.hIcon = reinterpret_cast<HICON>(GetClassLongPtrW(window, GCLP_HICON));
+    lstrcpynW(icon.szTip, appName, ARRAYSIZE(icon.szTip));
+    if (Shell_NotifyIconW(NIM_ADD, &icon)) {
+        icon.uVersion = NOTIFYICON_VERSION_4;
+        if (Shell_NotifyIconW(NIM_SETVERSION, &icon)) {
+            return true;
+        }
+        Shell_NotifyIconW(NIM_DELETE, &icon);
+    }
+    OutputDebugStringW(L"Impossible d’ajouter l’icône de notification.\n");
+    return false;
+}
+
+void restoreWindow(HWND window, WindowState& state)
+{
+    state.inTray = false;
+    auto icon = trayIcon(window);
+    Shell_NotifyIconW(NIM_DELETE, &icon);
+    ShowWindow(window, SW_RESTORE);
+    SetForegroundWindow(window);
+}
+
+void showTrayMenu(HWND window, WindowState& state, int x, int y)
+{
+    constexpr UINT open = 1;
+    constexpr UINT quit = 2;
+    HMENU menu = CreatePopupMenu();
+    if (!menu) {
+        restoreWindow(window, state);
+        return;
+    }
+    if (!AppendMenuW(menu, MF_STRING, open, L"Ouvrir Plop-Wallpaper") ||
+        !AppendMenuW(menu, MF_STRING, quit, L"Quitter")) {
+        DestroyMenu(menu);
+        restoreWindow(window, state);
+        return;
+    }
+    SetForegroundWindow(window);
+    const UINT command = TrackPopupMenu(menu, TPM_RETURNCMD | TPM_RIGHTBUTTON,
+                                        x, y, 0, window, nullptr);
+    DestroyMenu(menu);
+    PostMessageW(window, WM_NULL, 0, 0);
+    if (command == open) {
+        restoreWindow(window, state);
+    } else if (command == quit) {
+        DestroyWindow(window);
+    } else {
+        auto icon = trayIcon(window);
+        Shell_NotifyIconW(NIM_SETFOCUS, &icon);
+    }
+}
 
 void showRotationSettings(HWND window, const RotationSettings& rotation)
 {
@@ -291,11 +363,18 @@ void handleCommand(HWND window, WindowState& state, WPARAM command)
 LRESULT CALLBACK windowProcedure(HWND window, UINT message, WPARAM key, LPARAM data)
 {
     auto* windowState = reinterpret_cast<WindowState*>(GetWindowLongPtrW(window, GWLP_USERDATA));
+    if (windowState && message == windowState->taskbarCreated && windowState->taskbarCreated) {
+        if (windowState->inTray && !addTrayIcon(window)) {
+            restoreWindow(window, *windowState);
+        }
+        return 0;
+    }
     switch (message) {
     case WM_CREATE: {
         const auto* creation = reinterpret_cast<const CREATESTRUCTW*>(data);
         auto& state = *static_cast<WindowState*>(creation->lpCreateParams);
         SetWindowLongPtrW(window, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(&state));
+        state.taskbarCreated = RegisterWindowMessageW(L"TaskbarCreated");
         HWND label = createControl(window, L"STATIC", L"Écrans connectés", 0, 16, 16, 540, 22);
         HWND list = createControl(window, L"LISTBOX", L"", WS_BORDER | WS_VSCROLL |
             WS_TABSTOP | LBS_NOINTEGRALHEIGHT | LBS_NOTIFY, 16, 40, 540, 60, monitorListId);
@@ -388,13 +467,32 @@ LRESULT CALLBACK windowProcedure(HWND window, UINT message, WPARAM key, LPARAM d
             return TRUE;
         }
         break;
-    case WM_TIMER: {
-        auto* state = reinterpret_cast<WindowState*>(GetWindowLongPtrW(window, GWLP_USERDATA));
-        if (key == rotationTimer && state && state->rotation.enabled) {
-            rotateWallpapers(window, *state);
+    case WM_SIZE:
+        if (key == SIZE_MINIMIZED && windowState && !windowState->inTray &&
+            windowState->taskbarCreated && addTrayIcon(window)) {
+            windowState->inTray = true;
+            ShowWindow(window, SW_HIDE);
+        }
+        break;
+    case trayMessage:
+        if (windowState && windowState->inTray && HIWORD(data) == trayIconId) {
+            const UINT event = LOWORD(data);
+            if (event == WM_CONTEXTMENU) {
+                showTrayMenu(window, *windowState, GET_X_LPARAM(key), GET_Y_LPARAM(key));
+            } else if (event == WM_LBUTTONUP || event == NIN_KEYSELECT) {
+                if (windowState->rotation.enabled) {
+                    rotateWallpapers(window, *windowState);
+                } else {
+                    restoreWindow(window, *windowState);
+                }
+            }
         }
         return 0;
-    }
+    case WM_TIMER:
+        if (key == rotationTimer && windowState && windowState->rotation.enabled) {
+            rotateWallpapers(window, *windowState);
+        }
+        return 0;
     case WM_COMMAND: {
         auto* state = reinterpret_cast<WindowState*>(GetWindowLongPtrW(window, GWLP_USERDATA));
         if (state) {
@@ -403,6 +501,10 @@ LRESULT CALLBACK windowProcedure(HWND window, UINT message, WPARAM key, LPARAM d
         return 0;
     }
     case WM_DESTROY:
+        if (windowState && windowState->inTray) {
+            auto icon = trayIcon(window);
+            Shell_NotifyIconW(NIM_DELETE, &icon);
+        }
         KillTimer(window, rotationTimer);
         PostQuitMessage(0);
         return 0;
