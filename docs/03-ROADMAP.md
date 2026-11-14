@@ -52,4 +52,4 @@ Jalon : les mesures sont consignées et la procédure de production du paquet es
 
 ## Prochaine tâche
 
-[TASK-004 — Organiser et thématiser l’interface](tasks/TASK-004-organiser-et-thematiser-interface.md)
+Aucune tâche planifiée.

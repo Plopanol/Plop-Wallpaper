@@ -1,6 +1,6 @@
 # TASK-004 — Organiser et thématiser l’interface
 
-- **Statut :** En cours
+- **Statut :** À valider
 - **Phase :** Phase 3 — Interface et zone de notification
 - **Priorité :** Normale
 - **Dépendances :** TASK-003
@@ -19,8 +19,9 @@
 | Lot | Contenu | Préconditions | Contrôles | État |
 |---|---|---|---|---|
 | 1 | Rubriques et choix d’une image par écran | TASK-003 | Vérifier l’application ciblée, la persistance et la reprise de rotation | À valider |
-| 2 | Thèmes clair et sombre | Lot 1 | Changer le mode Windows pendant que la fenêtre est ouverte | À faire |
+| 2 | Thèmes clair et sombre | Lot 1 | Changer le mode Windows pendant que la fenêtre est ouverte | À valider |
 
 ## Validation et preuves
 
 - 2026-11-14 — Lot 1 compilé en Debug x64. Essai manuel en attente.
+- 2026-11-14 — Lot 2 compilé en Debug x64. Vérification rapide documentaire réussie. Changement de thème et lisibilité des contrôles à vérifier manuellement. Le contrôle complet de clôture est prévu après la validation.

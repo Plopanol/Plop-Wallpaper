@@ -1,5 +1,6 @@
 #include "settings.h"
 #include "startup.h"
+#include "theme.h"
 
 #include <wrl/client.h>
 
@@ -35,6 +36,9 @@ void showError(HWND owner, PCWSTR message, HRESULT result)
 HWND createControl(HWND window, PCWSTR type, PCWSTR text, DWORD style,
                    int x, int y, int width, int height, int id = 0)
 {
+    if (lstrcmpW(type, L"BUTTON") == 0 && (style & BS_TYPEMASK) == BS_PUSHBUTTON) {
+        style |= BS_OWNERDRAW;
+    }
     HWND control = CreateWindowW(type, text, WS_CHILD | WS_VISIBLE | style,
                                  x, y, width, height, window,
                                  reinterpret_cast<HMENU>(static_cast<INT_PTR>(id)),
@@ -60,6 +64,7 @@ struct WindowState {
     std::filesystem::path cache;
     Settings settings;
     RotationSettings rotation;
+    WindowTheme theme;
     std::vector<MonitorSettings> selections;
 };
 
@@ -285,6 +290,7 @@ void handleCommand(HWND window, WindowState& state, WPARAM command)
 
 LRESULT CALLBACK windowProcedure(HWND window, UINT message, WPARAM key, LPARAM data)
 {
+    auto* windowState = reinterpret_cast<WindowState*>(GetWindowLongPtrW(window, GWLP_USERDATA));
     switch (message) {
     case WM_CREATE: {
         const auto* creation = reinterpret_cast<const CREATESTRUCTW*>(data);
@@ -347,8 +353,41 @@ LRESULT CALLBACK windowProcedure(HWND window, UINT message, WPARAM key, LPARAM d
         }
         SendDlgItemMessageW(window, minutesId, EM_SETLIMITTEXT, 5, 0);
         showRotationSettings(window, state.rotation);
+        state.theme.refresh(window);
         return 0;
     }
+    case WM_SETTINGCHANGE:
+    case WM_SYSCOLORCHANGE:
+    case WM_THEMECHANGED:
+        if (windowState) {
+            windowState->theme.refresh(window);
+        }
+        break;
+    case WM_ERASEBKGND:
+        if (windowState) {
+            RECT bounds{};
+            GetClientRect(window, &bounds);
+            windowState->theme.paintBackground(reinterpret_cast<HDC>(key), bounds);
+            return TRUE;
+        }
+        break;
+    case WM_CTLCOLOREDIT:
+    case WM_CTLCOLORSTATIC:
+    case WM_CTLCOLORLISTBOX:
+    case WM_CTLCOLORBTN:
+        if (windowState) {
+            const auto brush = windowState->theme.colorControl(
+                reinterpret_cast<HDC>(key), reinterpret_cast<HWND>(data), message);
+            if (brush) {
+                return reinterpret_cast<LRESULT>(brush);
+            }
+        }
+        break;
+    case WM_DRAWITEM:
+        if (windowState && windowState->theme.drawButton(*reinterpret_cast<const DRAWITEMSTRUCT*>(data))) {
+            return TRUE;
+        }
+        break;
     case WM_TIMER: {
         auto* state = reinterpret_cast<WindowState*>(GetWindowLongPtrW(window, GWLP_USERDATA));
         if (key == rotationTimer && state && state->rotation.enabled) {
@@ -367,9 +406,8 @@ LRESULT CALLBACK windowProcedure(HWND window, UINT message, WPARAM key, LPARAM d
         KillTimer(window, rotationTimer);
         PostQuitMessage(0);
         return 0;
-    default:
-        return DefWindowProcW(window, message, key, data);
     }
+    return DefWindowProcW(window, message, key, data);
 }
 
 int run(HINSTANCE instance, int show)

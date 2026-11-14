@@ -22,6 +22,8 @@ Pour programmer les changements, cochez **Activer la rotation générale**, sais
 
 Cochez **Lancer Plop-Wallpaper à l’ouverture de session** pour ajouter un raccourci au dossier Démarrage de votre compte Windows. Décochez la case pour retirer ce raccourci.
 
+La fenêtre suit le mode clair ou sombre des applications dans **Paramètres → Personnalisation → Couleurs** de Windows.
+
 - [Périmètre et critères produit](docs/01-PRODUIT.md)
 - [Ordre des travaux](docs/03-ROADMAP.md)
 - [Règles et contrôles du dépôt](AGENTS.md)
