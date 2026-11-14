@@ -1,5 +1,10 @@
 # Journal des changements
 
+## 0.1.2 — 2026-11-14
+
+- Ajoute les modes d’ajustement par écran et la rotation à cadence commune.
+- Conserve les préférences et propose le lancement à l’ouverture de session Windows.
+
 ## 0.1.1 — 2026-11-14
 
 - Affiche les écrans connectés, leur résolution et leur orientation.
