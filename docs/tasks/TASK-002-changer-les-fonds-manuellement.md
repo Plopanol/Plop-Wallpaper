@@ -1,6 +1,6 @@
 # TASK-002 — Changer les fonds manuellement
 
-- **Statut :** À valider
+- **Statut :** Terminée
 - **Phase :** Phase 1 — Fonds manuels par écran
 - **Priorité :** Haute
 - **Dépendances :** TASK-001
@@ -12,15 +12,16 @@ Construire une première application Win32 x64 avec CMake et MSVC pour associer 
 
 ## Critères d'acceptation
 
-- [ ] Sur Windows 11 avec deux écrans d’orientations différentes, l’application affiche leur nom, leur résolution et leur orientation.
-- [ ] L’utilisateur associe un dossier distinct à chaque écran.
-- [ ] En déclenchant un changement sur chaque écran à tour de rôle, l’image provient du dossier associé et le fond de l’autre écran reste identique.
+- [x] Sur Windows 11 avec deux écrans d’orientations différentes, l’application affiche leur nom, leur résolution et leur orientation.
+- [x] L’utilisateur associe un dossier distinct à chaque écran.
+- [x] En déclenchant un changement sur chaque écran à tour de rôle, l’image provient du dossier associé et le fond de l’autre écran reste identique.
 
 ## Validation et preuves
 
 - 2026-11-14 — Compilation Debug x64 du lot 1 réussie sans avertissement avec CMake et MSVC 19.51.
 - 2026-11-14 — Compilations Debug et Release x64 du lot 2 réussies sans avertissement avec la même chaîne. Le contrôle documentaire `Test-Docs` et `git diff --check` passent.
-- Le contrôle complet de clôture reste à exécuter après l’essai manuel sur deux écrans.
+- 2026-11-14 — L’utilisateur confirme le bon fonctionnement à l’issue du parcours manuel ci-dessous.
+- 2026-11-14 — Contrôle complet réussi. Test-Docs passe les quatre vérifications et Sync-Commun confirme la conformité du dépôt.
 
 ### Parcours manuel sur Windows 11
 
@@ -33,7 +34,7 @@ Construire une première application Win32 x64 avec CMake et MSVC pour associer 
 | Lot | Contenu | Préconditions | Contrôles | État |
 |---|---|---|---|---|
 | 1 | Application Win32 x64 et affichage des écrans | TASK-001 | Compilation Debug | Terminé |
-| 2 | Dossiers par écran, application ciblée et README | Lot 1 | Compilation et parcours manuel sur deux écrans | À valider |
+| 2 | Dossiers par écran, application ciblée et README | Lot 1 | Compilation et parcours manuel sur deux écrans | Terminé |
 
 ## Obstacles et reprise
 
