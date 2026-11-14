@@ -23,12 +23,13 @@
 | Lot | Contenu | Préconditions | Contrôles | État |
 |---|---|---|---|---|
 | 1 | Modes d’ajustement paysage et portrait | TASK-002 | Vérifier les trois modes sur deux écrans | À valider |
-| 2 | Réglage général de rotation en minutes | TASK-002 | Vérifier l’activation, la cadence et la désactivation | À faire |
+| 2 | Réglage général de rotation en minutes et persistance INI | TASK-002 | Vérifier l’activation, la cadence, la désactivation et la relance | À valider |
 | 3 | Option de lancement avec Windows | Aucune | Vérifier l’ouverture de session avec l’option activée puis désactivée | À faire |
 
 ## Journal des lots
 
 - 2026-11-14 — Lot 1 compilé en Debug x64. Le contrôle documentaire passe. Essai sur deux écrans en attente.
+- 2026-11-14 — Lot 2 compilé en Debug x64. La cadence commune et la persistance restent à vérifier manuellement.
 
 ## Validation et preuves
 

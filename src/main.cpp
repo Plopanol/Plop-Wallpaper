@@ -1,4 +1,4 @@
-#include "wallpapers.h"
+#include "settings.h"
 
 #include <wrl/client.h>
 
@@ -13,6 +13,11 @@ constexpr int changeWallpaperId = 102;
 constexpr int folderPathId = 103;
 constexpr int statusId = 104;
 constexpr int fitId = 105;
+constexpr int participationId = 106;
+constexpr int rotationId = 107;
+constexpr int minutesId = 108;
+constexpr int applyRotationId = 109;
+constexpr UINT_PTR rotationTimer = 1;
 
 void showError(HWND owner, PCWSTR message, HRESULT result)
 {
@@ -37,18 +42,92 @@ HWND createControl(HWND window, PCWSTR type, PCWSTR text, DWORD style,
 }
 
 struct WindowState {
+    explicit WindowState(const std::filesystem::path& directory)
+        : cache(directory / L"fonds-générés"), settings(directory / L"config.ini")
+    {
+    }
+
     std::vector<Monitor> monitors;
     ComPtr<IDesktopWallpaper> wallpaper;
     ComPtr<IWICImagingFactory> imaging;
     std::filesystem::path cache;
-
-    struct Selection {
-        std::filesystem::path folder;
-        std::filesystem::path lastImage;
-        PortraitFit fit = PortraitFit::Width;
-    };
-    std::vector<Selection> selections;
+    Settings settings;
+    RotationSettings rotation;
+    std::vector<MonitorSettings> selections;
 };
+
+void showRotationSettings(HWND window, const RotationSettings& rotation)
+{
+    CheckDlgButton(window, rotationId, rotation.enabled ? BST_CHECKED : BST_UNCHECKED);
+    SetDlgItemInt(window, minutesId, rotation.minutes, FALSE);
+}
+
+HRESULT scheduleRotation(HWND window, const RotationSettings& rotation)
+{
+    if (!rotation.enabled) {
+        KillTimer(window, rotationTimer);
+        return S_OK;
+    }
+    SetLastError(ERROR_SUCCESS);
+    if (!SetTimer(window, rotationTimer, rotation.minutes * 60000, nullptr)) {
+        const auto error = GetLastError();
+        return error ? HRESULT_FROM_WIN32(error) : E_FAIL;
+    }
+    return S_OK;
+}
+
+void applyRotationSettings(HWND window, WindowState& state)
+{
+    BOOL valid = FALSE;
+    const UINT minutes = GetDlgItemInt(window, minutesId, &valid, FALSE);
+    if (!valid || minutes < 1 || minutes > RotationSettings::maxMinutes) {
+        SetDlgItemTextW(window, statusId, L"Saisissez un intervalle de 1 à 35 791 minutes.");
+        SetFocus(GetDlgItem(window, minutesId));
+        return;
+    }
+    const RotationSettings next{minutes, IsDlgButtonChecked(window, rotationId) == BST_CHECKED};
+    HRESULT result = scheduleRotation(window, next);
+    if (SUCCEEDED(result)) {
+        result = state.settings.saveRotation(next);
+        if (FAILED(result) && FAILED(scheduleRotation(window, state.rotation))) {
+            state.rotation.enabled = false;
+            OutputDebugStringW(L"Impossible de rétablir le minuteur de rotation.\n");
+        }
+    }
+    if (FAILED(result)) {
+        showRotationSettings(window, state.rotation);
+        showError(window, L"Impossible d’enregistrer ou de programmer la rotation.", result);
+        return;
+    }
+    state.rotation = next;
+    SetDlgItemTextW(window, statusId, L"Réglages de rotation enregistrés.");
+}
+
+HRESULT advanceWallpaper(WindowState& state, size_t index)
+{
+    auto& selection = state.selections[index];
+    const auto& monitor = state.monitors[index];
+    const HRESULT result = changeWallpaper(*state.wallpaper.Get(), *state.imaging.Get(),
+        monitor, selection.fit, state.cache, selection.folder, selection.lastImage);
+    return result == S_OK ? state.settings.saveMonitor(monitor, selection) : result;
+}
+
+void rotateWallpapers(HWND window, WindowState& state)
+{
+    bool failed = false;
+    for (size_t index = 0; index < state.selections.size(); ++index) {
+        const auto& selection = state.selections[index];
+        if (selection.participates && !selection.folder.empty()) {
+            if (advanceWallpaper(state, index) != S_OK) {
+                OutputDebugStringW(L"Rotation : impossible de changer ou d’enregistrer un fond.\n");
+                failed = true;
+            }
+        }
+    }
+    if (failed) {
+        SetDlgItemTextW(window, statusId, L"La rotation a rencontré une erreur sur au moins un écran.");
+    }
+}
 
 void updateSelection(HWND window, WindowState& state, LRESULT index)
 {
@@ -58,6 +137,8 @@ void updateSelection(HWND window, WindowState& state, LRESULT index)
     SetDlgItemTextW(window, statusId, L"");
     EnableWindow(GetDlgItem(window, chooseFolderId), selection != nullptr);
     EnableWindow(GetDlgItem(window, changeWallpaperId), hasFolder);
+    EnableWindow(GetDlgItem(window, participationId), selection != nullptr);
+    CheckDlgButton(window, participationId, selection && selection->participates ? BST_CHECKED : BST_UNCHECKED);
     RECT bounds{};
     const bool portrait = selection &&
         state.wallpaper->GetMonitorRECT(state.monitors[static_cast<size_t>(index)].id.c_str(), &bounds) == S_OK &&
@@ -71,12 +152,17 @@ void handleCommand(HWND window, WindowState& state, WPARAM command)
 {
     const int id = LOWORD(command);
     const int notification = HIWORD(command);
+    if (id == applyRotationId && notification == BN_CLICKED) {
+        applyRotationSettings(window, state);
+        return;
+    }
     const LRESULT index = SendDlgItemMessageW(window, monitorListId, LB_GETCURSEL, 0, 0);
     if (index == LB_ERR) {
         updateSelection(window, state, LB_ERR);
         return;
     }
     auto& selection = state.selections[static_cast<size_t>(index)];
+    const auto& monitor = state.monitors[static_cast<size_t>(index)];
     if (id == monitorListId && notification == LBN_SELCHANGE) {
         updateSelection(window, state, index);
     } else if (id == fitId && notification == CBN_SELCHANGE) {
@@ -95,24 +181,52 @@ void handleCommand(HWND window, WindowState& state, WPARAM command)
                 return;
             }
         }
-        selection.fit = fit;
+        auto next = selection;
+        next.fit = fit;
+        const HRESULT result = state.settings.saveMonitor(monitor, next);
+        if (FAILED(result)) {
+            if (!selection.lastImage.empty() && fit != selection.fit &&
+                FAILED(applyWallpaper(*state.wallpaper.Get(), *state.imaging.Get(), monitor,
+                                      selection.fit, state.cache, selection.lastImage))) {
+                OutputDebugStringW(L"Impossible de rétablir l’ajustement précédent.\n");
+            }
+            updateSelection(window, state, index);
+            showError(window, L"Impossible d’enregistrer l’ajustement.", result);
+            return;
+        }
+        selection = std::move(next);
+    } else if (id == participationId && notification == BN_CLICKED) {
+        auto next = selection;
+        next.participates = IsDlgButtonChecked(window, participationId) == BST_CHECKED;
+        const HRESULT result = state.settings.saveMonitor(monitor, next);
+        if (FAILED(result)) {
+            updateSelection(window, state, index);
+            showError(window, L"Impossible d’enregistrer la participation de cet écran.", result);
+            return;
+        }
+        selection = std::move(next);
     } else if (id == chooseFolderId && notification == BN_CLICKED) {
         std::filesystem::path folder;
         const HRESULT result = pickFolder(window, folder);
         if (FAILED(result)) {
             showError(window, L"Impossible de sélectionner le dossier.", result);
         } else if (result == S_OK) {
-            selection.folder = std::move(folder);
-            selection.lastImage.clear();
+            auto next = selection;
+            next.folder = std::move(folder);
+            next.lastImage.clear();
+            const HRESULT saved = state.settings.saveMonitor(monitor, next);
+            if (FAILED(saved)) {
+                showError(window, L"Impossible d’enregistrer le dossier.", saved);
+                return;
+            }
+            selection = std::move(next);
             updateSelection(window, state, index);
         }
     } else if (id == changeWallpaperId && notification == BN_CLICKED && !selection.folder.empty()) {
         SetDlgItemTextW(window, statusId, L"");
-        const HRESULT result = changeWallpaper(*state.wallpaper.Get(), *state.imaging.Get(),
-            state.monitors[static_cast<size_t>(index)], selection.fit, state.cache,
-            selection.folder, selection.lastImage);
+        const HRESULT result = advanceWallpaper(state, static_cast<size_t>(index));
         if (FAILED(result)) {
-            showError(window, L"Impossible d’appliquer un fond à cet écran.", result);
+            showError(window, L"Impossible d’appliquer ou d’enregistrer le fond de cet écran.", result);
         } else if (result == S_FALSE) {
             SetDlgItemTextW(window, statusId, L"Aucune image JPG, JPEG, PNG ou BMP lisible dans le dossier.");
         } else {
@@ -142,7 +256,16 @@ LRESULT CALLBACK windowProcedure(HWND window, UINT message, WPARAM key, LPARAM d
             !createControl(window, L"BUTTON", L"Changer le fond", WS_TABSTOP,
                 206, 212, 160, 30, changeWallpaperId) ||
             !createControl(window, L"STATIC", L"Ajustement du fond", 0, 16, 257, 180, 24) ||
-            !createControl(window, L"STATIC", L"", 0, 16, 294, 540, 24, statusId)) {
+            !createControl(window, L"BUTTON", L"Faire participer cet écran à la rotation",
+                WS_TABSTOP | BS_AUTOCHECKBOX, 16, 290, 380, 24, participationId) ||
+            !createControl(window, L"BUTTON", L"Activer la rotation générale",
+                WS_TABSTOP | BS_AUTOCHECKBOX, 16, 332, 250, 24, rotationId) ||
+            !createControl(window, L"STATIC", L"Intervalle (minutes)", 0, 270, 336, 125, 20) ||
+            !createControl(window, L"EDIT", L"", WS_BORDER | WS_TABSTOP | ES_NUMBER | ES_AUTOHSCROLL,
+                398, 332, 64, 24, minutesId) ||
+            !createControl(window, L"BUTTON", L"Appliquer", WS_TABSTOP,
+                470, 330, 86, 28, applyRotationId) ||
+            !createControl(window, L"STATIC", L"", 0, 16, 374, 540, 42, statusId)) {
             SetLastError(ERROR_CANNOT_MAKE);
             return -1;
         }
@@ -165,6 +288,15 @@ LRESULT CALLBACK windowProcedure(HWND window, UINT message, WPARAM key, LPARAM d
             SendMessageW(list, LB_SETCURSEL, 0, 0);
             updateSelection(window, state, 0);
         }
+        SendDlgItemMessageW(window, minutesId, EM_SETLIMITTEXT, 5, 0);
+        showRotationSettings(window, state.rotation);
+        return 0;
+    }
+    case WM_TIMER: {
+        auto* state = reinterpret_cast<WindowState*>(GetWindowLongPtrW(window, GWLP_USERDATA));
+        if (key == rotationTimer && state && state->rotation.enabled) {
+            rotateWallpapers(window, *state);
+        }
         return 0;
     }
     case WM_COMMAND: {
@@ -175,6 +307,7 @@ LRESULT CALLBACK windowProcedure(HWND window, UINT message, WPARAM key, LPARAM d
         return 0;
     }
     case WM_DESTROY:
+        KillTimer(window, rotationTimer);
         PostQuitMessage(0);
         return 0;
     default:
@@ -184,7 +317,6 @@ LRESULT CALLBACK windowProcedure(HWND window, UINT message, WPARAM key, LPARAM d
 
 int run(HINSTANCE instance, int show)
 {
-    WindowState state;
     std::wstring executable(32768, L'\0');
     const DWORD length = GetModuleFileNameW(nullptr, executable.data(), static_cast<DWORD>(executable.size()));
     if (!length || length == executable.size()) {
@@ -192,7 +324,7 @@ int run(HINSTANCE instance, int show)
         return 1;
     }
     executable.resize(length);
-    state.cache = std::filesystem::path(executable).parent_path() / L"fonds-générés";
+    WindowState state(std::filesystem::path(executable).parent_path());
     HRESULT result = CoCreateInstance(CLSID_DesktopWallpaper, nullptr, CLSCTX_ALL,
                                       IID_PPV_ARGS(state.wallpaper.GetAddressOf()));
     if (FAILED(result)) {
@@ -204,7 +336,10 @@ int run(HINSTANCE instance, int show)
         showError(nullptr, L"Impossible de détecter les écrans.", result);
         return 1;
     }
-    state.selections.resize(state.monitors.size());
+    for (const auto& monitor : state.monitors) {
+        state.selections.push_back(state.settings.loadMonitor(monitor));
+    }
+    state.rotation = state.settings.loadRotation();
     result = CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER,
                               IID_PPV_ARGS(state.imaging.GetAddressOf()));
     if (FAILED(result)) {
@@ -225,7 +360,7 @@ int run(HINSTANCE instance, int show)
     }
 
     constexpr DWORD style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
-    RECT size{0, 0, 572, 334};
+    RECT size{0, 0, 572, 430};
     AdjustWindowRect(&size, style, FALSE);
     HWND window = CreateWindowW(appName, appName, style, CW_USEDEFAULT, CW_USEDEFAULT,
                                 size.right - size.left, size.bottom - size.top,
@@ -235,6 +370,12 @@ int run(HINSTANCE instance, int show)
         return 1;
     }
     ShowWindow(window, show);
+    result = scheduleRotation(window, state.rotation);
+    if (FAILED(result)) {
+        state.rotation.enabled = false;
+        showRotationSettings(window, state.rotation);
+        showError(window, L"Impossible de programmer la rotation au démarrage.", result);
+    }
 
     MSG message{};
     BOOL received;
