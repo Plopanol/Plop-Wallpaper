@@ -1,6 +1,6 @@
 # TASK-002 — Changer les fonds manuellement
 
-- **Statut :** En cours
+- **Statut :** À valider
 - **Phase :** Phase 1 — Fonds manuels par écran
 - **Priorité :** Haute
 - **Dépendances :** TASK-001
@@ -19,13 +19,21 @@ Construire une première application Win32 x64 avec CMake et MSVC pour associer 
 ## Validation et preuves
 
 - 2026-11-14 — Compilation Debug x64 du lot 1 réussie sans avertissement avec CMake et MSVC 19.51.
+- 2026-11-14 — Compilations Debug et Release x64 du lot 2 réussies sans avertissement avec la même chaîne. Le contrôle documentaire `Test-Docs` et `git diff --check` passent.
+- Le contrôle complet de clôture reste à exécuter après l’essai manuel sur deux écrans.
+
+### Parcours manuel sur Windows 11
+
+1. Avec un écran paysage et un écran portrait en bureau étendu, lancer l’exécutable Debug. Comparer les noms, résolutions et orientations aux paramètres d’affichage de Windows.
+2. Sélectionner le premier écran et choisir un dossier contenant des images reconnaissables. Sélectionner le second et choisir un autre dossier. Revenir au premier et vérifier que son chemin est toujours affiché.
+3. Cliquer sur **Changer le fond** sur le premier écran. Vérifier que l’image vient de son dossier et que le fond du second écran reste identique. Répéter sur le second écran.
 
 ## Exécution
 
 | Lot | Contenu | Préconditions | Contrôles | État |
 |---|---|---|---|---|
 | 1 | Application Win32 x64 et affichage des écrans | TASK-001 | Compilation Debug | Terminé |
-| 2 | Dossiers par écran, application ciblée et README | Lot 1 | Compilation et parcours manuel sur deux écrans | À faire |
+| 2 | Dossiers par écran, application ciblée et README | Lot 1 | Compilation et parcours manuel sur deux écrans | À valider |
 
 ## Obstacles et reprise
 

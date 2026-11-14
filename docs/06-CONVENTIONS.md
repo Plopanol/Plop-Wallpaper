@@ -3,7 +3,7 @@
 ## Commandes et contrôles
 
 - Diagnostic de la chaîne Visual Studio — `vswhere.exe -all -products "*" -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64` depuis le répertoire de l’installateur Visual Studio.
-- Ajouter les commandes de configuration CMake, de compilation x64 et de lancement avec [TASK-002](tasks/TASK-002-changer-les-fonds-manuellement.md).
+- Configuration CMake, compilation x64 et lancement dans le [README](../README.md#compiler-et-lancer).
 - Pour les contrôles rapide et complet du dépôt, suivre [AGENTS.md](../AGENTS.md#commandes-et-contrôles).
 
 ## Code et validation

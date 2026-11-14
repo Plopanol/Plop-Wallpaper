@@ -6,7 +6,7 @@ La fiche fait foi pour le statut. La [roadmap](../03-ROADMAP.md) porte la procha
 
 | ID | Titre | Statut | Phase | Priorité |
 |---|---|---|---|---|
-| [TASK-002](TASK-002-changer-les-fonds-manuellement.md) | Changer les fonds manuellement | En cours | Phase 1 — Fonds manuels par écran | Haute |
+| [TASK-002](TASK-002-changer-les-fonds-manuellement.md) | Changer les fonds manuellement | À valider | Phase 1 — Fonds manuels par écran | Haute |
 
 ## À faire
 

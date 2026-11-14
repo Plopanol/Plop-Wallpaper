@@ -44,4 +44,4 @@ Jalon : les mesures sont consignées et la procédure de production du paquet es
 
 ## Prochaine tâche
 
-[TASK-002 — Changer les fonds manuellement](tasks/TASK-002-changer-les-fonds-manuellement.md)
+Aucune tâche planifiée.
