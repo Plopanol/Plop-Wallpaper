@@ -47,6 +47,7 @@ MonitorSettings Settings::loadMonitor(const Monitor& monitor) const
     MonitorSettings value;
     value.folder = readPath(section.c_str(), L"Folder", path_.c_str());
     value.lastImage = readPath(section.c_str(), L"LastImage", path_.c_str());
+    value.previousFolderImage = readPath(section.c_str(), L"PreviousFolderImage", path_.c_str());
     value.fit = GetPrivateProfileIntW(section.c_str(), L"FitHeight", 0, path_.c_str()) == 1
         ? PortraitFit::Height : PortraitFit::Width;
     value.participates = GetPrivateProfileIntW(section.c_str(), L"Participates", 1, path_.c_str()) != 0;
@@ -73,6 +74,7 @@ HRESULT Settings::saveMonitor(const Monitor& monitor, const MonitorSettings& val
     std::wstring fields;
     appendField(fields, L"Folder", value.folder.c_str());
     appendField(fields, L"LastImage", value.lastImage.c_str());
+    appendField(fields, L"PreviousFolderImage", value.previousFolderImage.c_str());
     appendField(fields, L"FitHeight", value.fit == PortraitFit::Height ? L"1" : L"0");
     appendField(fields, L"Participates", value.participates ? L"1" : L"0");
     appendField(fields, L"UniqueImage", value.uniqueImage.c_str());

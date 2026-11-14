@@ -6,8 +6,8 @@ Statuts : Signalé, Confirmé, En cours, Bloqué, Corrigé à vérifier, Clos, D
 
 | ID | Titre | Statut | Gravité | Composant |
 |---|---|---|---|---|
-| [BUG-002](BUG-002-liste-ecrans-obsolete.md) | Liste des écrans obsolète après un branchement | Signalé | Normale | Moniteurs |
-| [BUG-003](BUG-003-ajustement-apres-changement-dossier.md) | Ajustement inactif après un changement de dossier | Signalé | Normale | Fonds d’écran |
+| [BUG-002](BUG-002-liste-ecrans-obsolete.md) | Liste des écrans obsolète après un branchement | Corrigé à vérifier | Normale | Moniteurs |
+| [BUG-003](BUG-003-ajustement-apres-changement-dossier.md) | Ajustement inactif après un changement de dossier | Corrigé à vérifier | Normale | Fonds d’écran |
 
 ## Fermés
 

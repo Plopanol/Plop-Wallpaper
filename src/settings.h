@@ -5,14 +5,27 @@
 struct MonitorSettings {
     std::filesystem::path folder;
     std::filesystem::path lastImage;
+    std::filesystem::path previousFolderImage;
     PortraitFit fit = PortraitFit::Width;
     bool participates = true;
     std::filesystem::path uniqueImage;
     bool uniqueActive = false;
 
+    void changeFolder(std::filesystem::path newFolder)
+    {
+        folder = std::move(newFolder);
+        if (!lastImage.empty()) {
+            previousFolderImage = std::move(lastImage);
+            lastImage.clear();
+        }
+    }
+
     const std::filesystem::path& currentImage() const
     {
-        return uniqueActive ? uniqueImage : lastImage;
+        if (uniqueActive) {
+            return uniqueImage;
+        }
+        return lastImage.empty() ? previousFolderImage : lastImage;
     }
 };
 

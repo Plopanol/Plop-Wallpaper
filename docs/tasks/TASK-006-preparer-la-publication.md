@@ -22,12 +22,12 @@
 | Lot | Contenu | Préconditions | Contrôles | État |
 |---|---|---|---|---|
 | 1 | Licence MIT et inclusion dans le paquet | Attribution du copyright validée | Contrôle documentaire et lecture du script | À faire |
-| 2 | Actualiser les écrans et conserver le fond affiché durant le changement de dossier | Plan validé | Compilation et tests de non-régression | À faire |
+| 2 | Actualiser les écrans et conserver le fond affiché durant le changement de dossier | Plan validé | Compilation et tests de non-régression | À valider |
 | 3 | Restaurer la fenêtre au double-clic et présenter les réglages par écran | Lot 2 | Compilation, contrôles complets et essai manuel | À faire |
 
 ## Journal des lots
 
-Aucun lot exécuté.
+2026-11-14 — Lot 2 implémenté. Release et Debug x64 de validation construits, deux tests CTest réussis. Les deux premiers critères attendent l’essai manuel.
 
 ## Validation et preuves
 
@@ -35,4 +35,4 @@ Non exécutée.
 
 ## Obstacles et reprise
 
-Validation du plan avant l’implémentation. Anomalies liées : [BUG-002](../bugs/BUG-002-liste-ecrans-obsolete.md) et [BUG-003](../bugs/BUG-003-ajustement-apres-changement-dossier.md).
+Plan du lot 2 validé le 2026-11-14. Essai manuel en attente. Anomalies liées : [BUG-002](../bugs/BUG-002-liste-ecrans-obsolete.md) et [BUG-003](../bugs/BUG-003-ajustement-apres-changement-dossier.md).

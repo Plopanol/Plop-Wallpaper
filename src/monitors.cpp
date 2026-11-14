@@ -61,6 +61,8 @@ HRESULT readMonitors(IDesktopWallpaper& wallpaper, std::vector<Monitor>& monitor
     if (FAILED(countResult)) {
         return countResult;
     }
+    std::vector<Monitor> active;
+    active.reserve(count);
     for (UINT index = 0; index < count; ++index) {
         PWSTR rawId = nullptr;
         const HRESULT idResult = wallpaper.GetMonitorDevicePathAt(index, &rawId);
@@ -86,9 +88,10 @@ HRESULT readMonitors(IDesktopWallpaper& wallpaper, std::vector<Monitor>& monitor
         if (name.empty()) {
             name = L"Moniteur";
         }
-        const auto number = std::to_wstring(monitors.size() + 1);
-        monitors.push_back({id.get(), number + L" — " + name + L" | " +
+        const auto number = std::to_wstring(active.size() + 1);
+        active.push_back({id.get(), number + L" — " + name + L" | " +
             std::to_wstring(width) + L" × " + std::to_wstring(height) + L" | " + orientation});
     }
+    monitors = std::move(active);
     return S_OK;
 }

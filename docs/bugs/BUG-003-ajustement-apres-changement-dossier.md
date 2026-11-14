@@ -1,6 +1,6 @@
 # BUG-003 — Ajustement inactif après un changement de dossier
 
-- **Statut :** Signalé
+- **Statut :** Corrigé à vérifier
 - **Gravité :** Normale
 - **Composant :** Fonds d’écran
 - **Signalé le :** 2026-11-14
@@ -26,4 +26,10 @@ Le choix du dossier efface la dernière image de rotation, qui sert aussi à ret
 
 ## Correction et vérification
 
-À confirmer sur un écran portrait.
+Le changement de dossier réinitialise le curseur de rotation et conserve le chemin du dernier fond de rotation pour l’ajustement. Le chemin est mémorisé dans la configuration et le premier fond appliqué depuis le nouveau dossier le remplace.
+
+Le test CTest BUG-003 reproduit la perte du chemin affiché en 0.1.4. Il vérifie les changements successifs de dossier, la prochaine image appliquée et le mode Unique.
+
+- 2026-11-14 — CTest en échec avant correction, réussi après correction en Release et Debug x64. Contrôle documentaire complet réussi.
+- Debug standard en échec sur la chaîne MSVC (LNK1101). Debug local construit avec les symboles embarqués et sans édition de liens incrémentielle.
+- Essai manuel sur deux écrans en attente.

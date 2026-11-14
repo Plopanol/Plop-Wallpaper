@@ -3,6 +3,7 @@
 #include "startup.h"
 #include "theme.h"
 
+#include <dbt.h>
 #include <shellapi.h>
 #include <windowsx.h>
 #include <wrl/client.h>
@@ -26,7 +27,10 @@ constexpr int startupId = 110;
 constexpr int chooseImageId = 111;
 constexpr int imagePathId = 112;
 constexpr int randomId = 113;
+constexpr int monitorLabelId = 114;
 constexpr UINT_PTR rotationTimer = 1;
+constexpr UINT_PTR monitorTimer = 2;
+constexpr UINT monitorRefreshDelay = 250;
 constexpr UINT trayMessage = WM_APP + 1;
 constexpr UINT trayIconId = 1;
 
@@ -75,6 +79,8 @@ struct WindowState {
     std::vector<MonitorSettings> selections;
     UINT taskbarCreated = 0;
     bool inTray = false;
+    bool handlingCommand = false;
+    bool monitorsPending = false;
 };
 
 NOTIFYICONDATAW trayIcon(HWND window)
@@ -202,6 +208,7 @@ HRESULT advanceWallpaper(WindowState& state, size_t index)
     if (result != S_OK) {
         return result;
     }
+    selection.previousFolderImage.clear();
     selection.uniqueActive = false;
     return state.settings.saveMonitor(monitor, selection);
 }
@@ -243,6 +250,71 @@ void updateSelection(HWND window, WindowState& state, LRESULT index)
     EnableWindow(GetDlgItem(window, fitId), portrait);
     const int fit = portrait ? (selection->fit == PortraitFit::Width ? 1 : 2) : (selection ? 0 : -1);
     SendDlgItemMessageW(window, fitId, CB_SETCURSEL, fit, 0);
+}
+
+bool showMonitors(HWND window, WindowState& state, const std::wstring& selectedId)
+{
+    const HWND list = GetDlgItem(window, monitorListId);
+    SendMessageW(list, LB_RESETCONTENT, 0, 0);
+    LRESULT selected = LB_ERR;
+    for (const auto& monitor : state.monitors) {
+        const auto index = SendMessageW(list, LB_ADDSTRING, 0,
+            reinterpret_cast<LPARAM>(monitor.label.c_str()));
+        if (index < 0) {
+            SendMessageW(list, LB_RESETCONTENT, 0, 0);
+            updateSelection(window, state, LB_ERR);
+            return false;
+        }
+        if (selected == LB_ERR || monitor.id == selectedId) {
+            selected = index;
+        }
+    }
+    SetDlgItemTextW(window, monitorLabelId,
+        state.monitors.empty() ? L"Aucun écran détecté." : L"Écrans connectés");
+    SendMessageW(list, LB_SETCURSEL, selected, 0);
+    updateSelection(window, state, selected);
+    return true;
+}
+
+bool refreshMonitors(HWND window, WindowState& state)
+{
+    std::vector<Monitor> monitors;
+    if (FAILED(readMonitors(*state.wallpaper.Get(), monitors))) {
+        OutputDebugStringW(L"Impossible d’actualiser les écrans connectés.\n");
+        SetDlgItemTextW(window, statusId, L"Impossible d’actualiser les écrans connectés.");
+        return false;
+    }
+
+    const auto index = SendDlgItemMessageW(window, monitorListId, LB_GETCURSEL, 0, 0);
+    const auto selectedId = index == LB_ERR ? std::wstring{} : state.monitors[static_cast<size_t>(index)].id;
+    std::vector<MonitorSettings> selections;
+    selections.reserve(monitors.size());
+    for (const auto& monitor : monitors) {
+        size_t previous = 0;
+        while (previous < state.monitors.size() && state.monitors[previous].id != monitor.id) {
+            ++previous;
+        }
+        selections.push_back(previous < state.monitors.size()
+            ? std::move(state.selections[previous]) : state.settings.loadMonitor(monitor));
+    }
+    state.monitors = std::move(monitors);
+    state.selections = std::move(selections);
+    if (!showMonitors(window, state, selectedId)) {
+        OutputDebugStringW(L"Impossible d’afficher la liste des écrans.\n");
+        SetDlgItemTextW(window, statusId, L"Impossible d’afficher la liste des écrans.");
+    }
+    return true;
+}
+
+void scheduleMonitorRefresh(HWND window, WindowState& state)
+{
+    state.monitorsPending = true;
+    if (!SetTimer(window, monitorTimer, monitorRefreshDelay, nullptr)) {
+        OutputDebugStringW(L"Impossible de programmer l’actualisation des écrans.\n");
+        if (!state.handlingCommand) {
+            state.monitorsPending = !refreshMonitors(window, state);
+        }
+    }
 }
 
 void handleCommand(HWND window, WindowState& state, WPARAM command)
@@ -320,8 +392,7 @@ void handleCommand(HWND window, WindowState& state, WPARAM command)
             showError(window, L"Impossible de sélectionner le dossier.", result);
         } else if (result == S_OK) {
             auto next = selection;
-            next.folder = std::move(folder);
-            next.lastImage.clear();
+            next.changeFolder(std::move(folder));
             const HRESULT saved = state.settings.saveMonitor(monitor, next);
             if (FAILED(saved)) {
                 showError(window, L"Impossible d’enregistrer le dossier.", saved);
@@ -381,7 +452,7 @@ LRESULT CALLBACK windowProcedure(HWND window, UINT message, WPARAM key, LPARAM d
         auto& state = *static_cast<WindowState*>(creation->lpCreateParams);
         SetWindowLongPtrW(window, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(&state));
         state.taskbarCreated = RegisterWindowMessageW(L"TaskbarCreated");
-        HWND label = createControl(window, L"STATIC", L"Écrans connectés", 0, 16, 16, 540, 22);
+        HWND label = createControl(window, L"STATIC", L"Écrans connectés", 0, 16, 16, 540, 22, monitorLabelId);
         HWND list = createControl(window, L"LISTBOX", L"", WS_BORDER | WS_VSCROLL |
             WS_TABSTOP | LBS_NOINTEGRALHEIGHT | LBS_NOTIFY, 16, 40, 540, 60, monitorListId);
         if (!label || !list ||
@@ -425,24 +496,26 @@ LRESULT CALLBACK windowProcedure(HWND window, UINT message, WPARAM key, LPARAM d
                 return -1;
             }
         }
-        for (const auto& monitor : state.monitors) {
-            if (SendMessageW(list, LB_ADDSTRING, 0, reinterpret_cast<LPARAM>(monitor.label.c_str())) < 0) {
-                SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-                return -1;
-            }
-        }
-        if (state.monitors.empty()) {
-            SetWindowTextW(label, L"Aucun écran détecté.");
-            updateSelection(window, state, LB_ERR);
-        } else {
-            SendMessageW(list, LB_SETCURSEL, 0, 0);
-            updateSelection(window, state, 0);
+        if (!showMonitors(window, state, {})) {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            return -1;
         }
         SendDlgItemMessageW(window, minutesId, EM_SETLIMITTEXT, 5, 0);
         showRotationSettings(window, state.rotation);
         state.theme.refresh(window);
         return 0;
     }
+    case WM_DISPLAYCHANGE:
+        if (windowState) {
+            scheduleMonitorRefresh(window, *windowState);
+        }
+        return 0;
+    case WM_DEVICECHANGE:
+        if (windowState && key == DBT_DEVNODES_CHANGED) {
+            scheduleMonitorRefresh(window, *windowState);
+            return TRUE;
+        }
+        break;
     case WM_SETTINGCHANGE:
     case WM_SYSCOLORCHANGE:
     case WM_THEMECHANGED:
@@ -491,23 +564,37 @@ LRESULT CALLBACK windowProcedure(HWND window, UINT message, WPARAM key, LPARAM d
             if (event == WM_CONTEXTMENU) {
                 showTrayMenu(window, *windowState, GET_X_LPARAM(key), GET_Y_LPARAM(key));
             } else if (event == WM_LBUTTONUP || event == NIN_KEYSELECT) {
-                if (windowState->rotation.enabled) {
-                    rotateWallpapers(window, *windowState);
-                } else {
+                if (!windowState->rotation.enabled) {
                     restoreWindow(window, *windowState);
+                } else if (!windowState->handlingCommand &&
+                           (!windowState->monitorsPending || refreshMonitors(window, *windowState))) {
+                    windowState->monitorsPending = false;
+                    rotateWallpapers(window, *windowState);
                 }
             }
         }
         return 0;
     case WM_TIMER:
-        if (key == rotationTimer && windowState && windowState->rotation.enabled) {
+        if (key == monitorTimer && windowState && !windowState->handlingCommand) {
+            KillTimer(window, monitorTimer);
+            windowState->monitorsPending = !refreshMonitors(window, *windowState);
+        } else if (key == rotationTimer && windowState && windowState->rotation.enabled &&
+                   !windowState->handlingCommand &&
+                   (!windowState->monitorsPending || refreshMonitors(window, *windowState))) {
+            windowState->monitorsPending = false;
             rotateWallpapers(window, *windowState);
         }
         return 0;
     case WM_COMMAND: {
         auto* state = reinterpret_cast<WindowState*>(GetWindowLongPtrW(window, GWLP_USERDATA));
-        if (state) {
+        if (state && !state->handlingCommand) {
+            // File dialogs dispatch messages while handleCommand holds references to the selection.
+            state->handlingCommand = true;
             handleCommand(window, *state, key);
+            state->handlingCommand = false;
+            if (state->monitorsPending) {
+                scheduleMonitorRefresh(window, *state);
+            }
         }
         return 0;
     }
@@ -517,6 +604,7 @@ LRESULT CALLBACK windowProcedure(HWND window, UINT message, WPARAM key, LPARAM d
             Shell_NotifyIconW(NIM_DELETE, &icon);
         }
         KillTimer(window, rotationTimer);
+        KillTimer(window, monitorTimer);
         PostQuitMessage(0);
         return 0;
     }

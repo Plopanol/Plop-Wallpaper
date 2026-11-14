@@ -1,5 +1,10 @@
 # Journal des changements
 
+## 0.1.5 — 2026-11-14
+
+- Actualise la liste et les cibles de rotation au branchement ou au débranchement d’un écran.
+- Conserve le fond affiché ajustable après un changement de dossier de rotation.
+
 ## 0.1.4 — 2026-11-14
 
 - Réduit l’application dans la zone de notification et déclenche la rotation des écrans participants au clic.
