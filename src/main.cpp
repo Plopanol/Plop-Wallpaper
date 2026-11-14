@@ -675,6 +675,13 @@ LRESULT CALLBACK windowProcedure(HWND window, UINT message, WPARAM key, LPARAM d
         break;
     case WM_NOTIFY: {
         const auto& notification = *reinterpret_cast<const NMHDR*>(data);
+        if (windowState && notification.code == NM_CUSTOMDRAW &&
+            (notification.idFrom == rotationModeId || notification.idFrom == uniqueModeId)) {
+            const auto& draw = *reinterpret_cast<const NMCUSTOMDRAW*>(data);
+            if (draw.dwDrawStage == CDDS_PREPAINT) {
+                return windowState->theme.drawModeOption(notification.hwndFrom, draw.hdc, draw.rc);
+            }
+        }
         if (windowState && notification.idFrom == monitorListId && notification.code == LVN_ITEMCHANGED) {
             const auto& change = *reinterpret_cast<const NMLISTVIEW*>(data);
             if (((change.uOldState ^ change.uNewState) & LVIS_SELECTED) != 0) {

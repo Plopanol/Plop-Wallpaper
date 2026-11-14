@@ -51,4 +51,4 @@
 
 Essai attendu sur deux écrans, dont un en portrait. Vérifier le tableau, le sélecteur et la rubrique visible sur chaque écran, puis la mémorisation des modes après redémarrage et reconnexion. Avec un écran en Rotation et l’autre en Unique, vérifier qu’un clic simple change uniquement le fond du premier et qu’un double-clic restaure la fenêtre sans changer de fond. Avec les deux écrans en Unique, vérifier que le clic simple restaure la fenêtre.
 
-Anomalies liées : [BUG-002](../bugs/BUG-002-liste-ecrans-obsolete.md), [BUG-003](../bugs/BUG-003-ajustement-apres-changement-dossier.md) et [BUG-004](../bugs/BUG-004-entetes-tableau-mode-sombre.md).
+Anomalies liées : [BUG-002](../bugs/BUG-002-liste-ecrans-obsolete.md), [BUG-003](../bugs/BUG-003-ajustement-apres-changement-dossier.md), [BUG-004](../bugs/BUG-004-entetes-tableau-mode-sombre.md) et [BUG-005](../bugs/BUG-005-modes-ecran-illisibles.md).

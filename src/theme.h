@@ -9,6 +9,7 @@ public:
     HBRUSH colorControl(HDC context, HWND control, UINT message) const;
     bool drawSection(const DRAWITEMSTRUCT& item) const;
     bool drawButton(const DRAWITEMSTRUCT& item) const;
+    LRESULT drawModeOption(HWND control, HDC context, RECT bounds) const;
 
 private:
     bool dark_ = false;

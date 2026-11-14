@@ -3,6 +3,7 @@
 #include <commctrl.h>
 #include <dwmapi.h>
 #include <uxtheme.h>
+#include <vsstyle.h>
 #include <winrt/Windows.UI.ViewManagement.h>
 
 namespace {
@@ -161,6 +162,54 @@ bool WindowTheme::drawSection(const DRAWITEMSTRUCT& item) const
     DrawTextW(item.hDC, title, -1, &caption, DT_SINGLELINE | DT_NOPREFIX);
     RestoreDC(item.hDC, saved);
     return true;
+}
+
+LRESULT WindowTheme::drawModeOption(HWND control, HDC context, RECT bounds) const
+{
+    if (!dark_) {
+        return CDRF_DODEFAULT;
+    }
+    const int saved = SaveDC(context);
+    if (!saved) {
+        return CDRF_DODEFAULT;
+    }
+    paintBackground(context, bounds);
+    const auto font = reinterpret_cast<HFONT>(SendMessageW(control, WM_GETFONT, 0, 0));
+    if (font) {
+        SelectObject(context, font);
+    }
+    const auto state = SendMessageW(control, BM_GETSTATE, 0, 0);
+    const auto uiState = SendMessageW(control, WM_QUERYUISTATE, 0, 0);
+    const bool enabled = IsWindowEnabled(control);
+    const bool checked = (state & BST_CHECKED) != 0;
+    const int glyphState = (checked ? RBS_CHECKEDNORMAL : RBS_UNCHECKEDNORMAL) +
+        (!enabled ? 3 : (state & BST_PUSHED) ? 2 : (state & BST_HOT) ? 1 : 0);
+    const HTHEME theme = GetWindowTheme(control);
+    SIZE size{13, 13};
+    if (theme) {
+        GetThemePartSize(theme, context, BP_RADIOBUTTON, glyphState, nullptr, TS_TRUE, &size);
+    }
+    const LONG top = bounds.top + (bounds.bottom - bounds.top - size.cy) / 2;
+    RECT glyph{bounds.left, top, bounds.left + size.cx, top + size.cy};
+    if (!theme || FAILED(DrawThemeBackground(theme, context, BP_RADIOBUTTON, glyphState, &glyph, nullptr))) {
+        DrawFrameControl(context, &glyph, DFC_BUTTON, DFCS_BUTTONRADIO |
+            (checked ? DFCS_CHECKED : 0) | (enabled ? 0 : DFCS_INACTIVE));
+    }
+    bounds.left = glyph.right + 5;
+    wchar_t text[64]{};
+    GetWindowTextW(control, text, ARRAYSIZE(text));
+    SetBkMode(context, TRANSPARENT);
+    SetTextColor(context, enabled ? sectionTitleColor : mutedColor);
+    DrawTextW(context, text, -1, &bounds, DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX);
+    if ((state & BST_FOCUS) && !(uiState & UISF_HIDEFOCUS)) {
+        RECT focus = bounds;
+        DrawTextW(context, text, -1, &focus, DT_SINGLELINE | DT_CALCRECT | DT_NOPREFIX);
+        OffsetRect(&focus, 0, (bounds.bottom - bounds.top - (focus.bottom - focus.top)) / 2);
+        InflateRect(&focus, 2, 1);
+        DrawFocusRect(context, &focus);
+    }
+    RestoreDC(context, saved);
+    return CDRF_SKIPDEFAULT;
 }
 
 bool WindowTheme::drawButton(const DRAWITEMSTRUCT& item) const
