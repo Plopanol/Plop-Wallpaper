@@ -1,5 +1,12 @@
 # Journal des changements
 
+## 0.1.6 — 2026-11-14
+
+- Ajoute le tableau des écrans et le choix mémorisé entre Rotation et Unique.
+- Rend les en-têtes et les options de mode lisibles en mode sombre.
+- Rouvre la fenêtre au double-clic sur l’icône de notification sans déclencher de rotation.
+- Ajoute la licence MIT au paquet portable.
+
 ## 0.1.5 — 2026-11-14
 
 - Actualise la liste et les cibles de rotation au branchement ou au débranchement d’un écran.

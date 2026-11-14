@@ -1,6 +1,6 @@
 # TASK-006 — Préparer la publication
 
-- **Statut :** À valider
+- **Statut :** Terminée
 - **Phase :** Phase 4 — Persistance et événements Windows
 - **Priorité :** Haute
 - **Dépendances :** TASK-005
@@ -12,11 +12,11 @@
 
 - [x] Le branchement ou le débranchement d’un écran actualise la liste sans relancer l’application. La rotation cible les écrans présents et la reconnexion restaure les réglages de l’écran.
 - [x] Après un changement de dossier, le fond encore affiché peut être réajusté en portrait. La prochaine rotation utilise le nouveau dossier.
-- [ ] Le double-clic sur l’icône de notification restaure la fenêtre sans changer de fond. Le clic simple conserve son action actuelle.
-- [ ] Le tableau affiche une ligne par écran et les colonnes Nom écran, Mode actuel (Rotation ou Unique), Aléatoire/Fixe, Dossier et Ajustement. La sélection pilote les réglages de l’écran et les cellules suivent les changements.
-- [ ] Le mode Rotation ou Unique est mémorisé par écran et affiche uniquement sa rubrique. Les deux anciennes cases de rotation sont retirées. Seuls les écrans en mode Rotation ayant un dossier changent automatiquement de fond.
+- [x] Le double-clic sur l’icône de notification restaure la fenêtre sans changer de fond. Le clic simple conserve son action actuelle.
+- [x] Le tableau affiche une ligne par écran et les colonnes Nom écran, Mode actuel (Rotation ou Unique), Aléatoire/Fixe, Dossier et Ajustement. La sélection pilote les réglages de l’écran et les cellules suivent les changements.
+- [x] Le mode Rotation ou Unique est mémorisé par écran et affiche uniquement sa rubrique. Les deux anciennes cases de rotation sont retirées. Seuls les écrans en mode Rotation ayant un dossier changent automatiquement de fond.
 - [x] Le fichier `LICENSE` contient la licence MIT. Le script inclut et vérifie ce fichier au prochain conditionnement.
-- [ ] La compilation Release x64, les tests de non-régression, le contrôle documentaire complet et le scan de publication passent. Les parcours visibles sont vérifiés manuellement sur deux écrans.
+- [x] La compilation Release x64, les tests de non-régression, le contrôle documentaire complet et le scan de publication passent. Les parcours visibles sont vérifiés manuellement sur deux écrans.
 
 ## Exécution
 
@@ -24,8 +24,8 @@
 |---|---|---|---|---|
 | 1 | Licence MIT et inclusion dans le paquet | Attribution du copyright validée | Contrôle documentaire et lecture du script | Terminé |
 | 2 | Actualiser les écrans et conserver le fond affiché durant le changement de dossier | Plan validé | Compilation et tests de non-régression | Terminé |
-| 3 | Restaurer la fenêtre au double-clic et présenter les réglages par écran | Lot 2 | Compilation, contrôles complets et essai manuel | À valider |
-| 4 | Choisir le mode et afficher sa rubrique par écran | Plan validé | Compilation, contrôles et essai manuel sur deux écrans | À valider |
+| 3 | Restaurer la fenêtre au double-clic et présenter les réglages par écran | Lot 2 | Compilation, contrôles complets et essai manuel | Terminé |
+| 4 | Choisir le mode et afficher sa rubrique par écran | Plan validé | Compilation, contrôles et essai manuel sur deux écrans | Terminé |
 
 ## Journal des lots
 
@@ -39,6 +39,8 @@
 
 ## Validation et preuves
 
+2026-11-14 — Validation utilisateur reçue après livraison du Debug x64 `c63b7fd` et demande de construire le livrable. Les compilations Release et Debug x64 et les quatre tests CTest avaient réussi sur ce code.
+
 2026-11-14 — Lot 4 : après suppression d’une référence restante à l’ancien réglage global, les compilations Release et Debug x64, les quatre tests CTest, le contrôle documentaire complet et le scan de publication avec historique passent. Validation manuelle en attente sur `build/debug-modes/Debug/PlopWallpaper.exe`.
 
 2026-11-14 — L’utilisateur a validé les parcours de branchement et de changement de dossier sur le Debug x64 du commit `39b206a`.
@@ -48,7 +50,5 @@
 2026-11-14 — Scan de publication avec historique sans correspondance. Le contrôle documentaire a d’abord détecté le lien vers la tâche en attente de validation dans « Prochaine tâche ». Après correction de la roadmap, Test-Docs et Sync-Commun ont réussi.
 
 ## Obstacles et reprise
-
-Essai attendu sur deux écrans, dont un en portrait. Vérifier le tableau, le sélecteur et la rubrique visible sur chaque écran, puis la mémorisation des modes après redémarrage et reconnexion. Avec un écran en Rotation et l’autre en Unique, vérifier qu’un clic simple change uniquement le fond du premier et qu’un double-clic restaure la fenêtre sans changer de fond. Avec les deux écrans en Unique, vérifier que le clic simple restaure la fenêtre.
 
 Anomalies liées : [BUG-002](../bugs/BUG-002-liste-ecrans-obsolete.md), [BUG-003](../bugs/BUG-003-ajustement-apres-changement-dossier.md), [BUG-004](../bugs/BUG-004-entetes-tableau-mode-sombre.md) et [BUG-005](../bugs/BUG-005-modes-ecran-illisibles.md).

@@ -4,9 +4,7 @@ La fiche fait foi pour le statut. La [roadmap](../03-ROADMAP.md) porte la procha
 
 ## Actives
 
-| ID | Titre | Statut | Phase | Priorité |
-|---|---|---|---|---|
-| [TASK-006](TASK-006-preparer-la-publication.md) | Préparer la publication | À valider | Phase 4 — Persistance et événements Windows | Haute |
+Aucune.
 
 ## À faire
 
@@ -25,3 +23,4 @@ Aucune.
 | [TASK-003](TASK-003-configurer-les-fonds-et-le-demarrage.md) | Configurer les fonds et le démarrage | Terminée | Phase 2 — Rotation indépendante | Normale |
 | [TASK-004](TASK-004-organiser-et-thematiser-interface.md) | Organiser et thématiser l’interface | Terminée | Phase 3 — Interface et zone de notification | Normale |
 | [TASK-005](TASK-005-notification-et-rotation.md) | Réduire en notification et varier la rotation | Terminée | Phase 3 — Interface et zone de notification | Normale |
+| [TASK-006](TASK-006-preparer-la-publication.md) | Préparer la publication | Terminée | Phase 4 — Persistance et événements Windows | Haute |
