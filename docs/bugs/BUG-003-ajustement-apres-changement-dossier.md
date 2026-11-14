@@ -32,4 +32,5 @@ Le test CTest BUG-003 reproduit la perte du chemin affiché en 0.1.4. Il vérifi
 
 - 2026-11-14 — CTest en échec avant correction, réussi après correction en Release et Debug x64. Contrôle documentaire complet réussi.
 - Debug standard en échec sur la chaîne MSVC (LNK1101). Debug local construit avec les symboles embarqués et sans édition de liens incrémentielle.
-- Essai manuel sur deux écrans en attente.
+- 2026-11-14 — Essai manuel validé par l’utilisateur sur le Debug x64 du commit `39b206a` de TASK-006 : fond du dossier A réajusté en portrait après la sélection du dossier B, puis prochaine image prise dans B.
+- Clôture après vérification sur un exécutable reconstruit depuis la branche principale, après fusion de TASK-006.
