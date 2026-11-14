@@ -45,4 +45,4 @@
 
 Essai du lot 3 attendu sur deux écrans, dont un en portrait. Vérifier la sélection, la mise à jour du mode, de l’ordre de rotation, du dossier et de l’ajustement dans le tableau, ainsi que son actualisation au débranchement et à la reconnexion. Avec la rotation active, vérifier qu’un clic simple change le fond des écrans participants et qu’un double-clic restaure la fenêtre sans changer de fond. Avec la rotation désactivée, vérifier que le clic simple restaure la fenêtre.
 
-Anomalies liées : [BUG-002](../bugs/BUG-002-liste-ecrans-obsolete.md) et [BUG-003](../bugs/BUG-003-ajustement-apres-changement-dossier.md).
+Anomalies liées : [BUG-002](../bugs/BUG-002-liste-ecrans-obsolete.md), [BUG-003](../bugs/BUG-003-ajustement-apres-changement-dossier.md) et [BUG-004](../bugs/BUG-004-entetes-tableau-mode-sombre.md).

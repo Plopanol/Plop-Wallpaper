@@ -36,6 +36,45 @@ HBRUSH selectColor(HDC context, COLORREF color)
     return static_cast<HBRUSH>(GetStockObject(DC_BRUSH));
 }
 
+LRESULT CALLBACK drawMonitorHeader(HWND list, UINT message, WPARAM key, LPARAM data,
+                                  UINT_PTR, DWORD_PTR dark)
+{
+    if (dark && message == WM_NOTIFY) {
+        const auto& notification = *reinterpret_cast<const NMHDR*>(data);
+        if (notification.hwndFrom == ListView_GetHeader(list) && notification.code == NM_CUSTOMDRAW) {
+            const auto& item = *reinterpret_cast<const NMCUSTOMDRAW*>(data);
+            if (item.dwDrawStage == CDDS_PREPAINT) {
+                return CDRF_NOTIFYITEMDRAW;
+            }
+            if (item.dwDrawStage == CDDS_ITEMPREPAINT) {
+                wchar_t text[128]{};
+                HDITEMW column{};
+                column.mask = HDI_TEXT;
+                column.pszText = text;
+                column.cchTextMax = ARRAYSIZE(text);
+                if (Header_GetItem(notification.hwndFrom, static_cast<int>(item.dwItemSpec), &column)) {
+                    const int saved = SaveDC(item.hdc);
+                    if (saved) {
+                        RECT bounds = item.rc;
+                        FillRect(item.hdc, &bounds, selectColor(item.hdc, fieldColor));
+                        RECT divider{bounds.right - 1, bounds.top, bounds.right, bounds.bottom};
+                        FillRect(item.hdc, &divider, selectColor(item.hdc, backgroundColor));
+                        bounds.left += 6;
+                        bounds.right -= 6;
+                        SetBkMode(item.hdc, TRANSPARENT);
+                        SetTextColor(item.hdc, sectionTitleColor);
+                        DrawTextW(item.hdc, text, -1, &bounds,
+                                  DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS);
+                        RestoreDC(item.hdc, saved);
+                        return CDRF_SKIPDEFAULT;
+                    }
+                }
+            }
+        }
+    }
+    return DefSubclassProc(list, message, key, data);
+}
+
 }
 
 void WindowTheme::refresh(HWND window)
@@ -60,7 +99,12 @@ void WindowTheme::refresh(HWND window)
             ListView_SetBkColor(child, background);
             ListView_SetTextBkColor(child, background);
             ListView_SetTextColor(child, dark_ ? textColor : GetSysColor(COLOR_WINDOWTEXT));
-            SetWindowTheme(ListView_GetHeader(child), dark_ ? L"DarkMode_ItemsView" : nullptr, nullptr);
+            const HWND header = ListView_GetHeader(child);
+            // The header sends custom-draw notifications to the list view.
+            if (!SetWindowSubclass(child, drawMonitorHeader, 1, dark_)) {
+                OutputDebugStringW(L"Impossible de personnaliser les en-têtes du tableau.\n");
+            }
+            SetWindowTheme(header, dark_ ? L"DarkMode_ItemsView" : nullptr, nullptr);
         }
     }
     RedrawWindow(window, nullptr, nullptr, RDW_INVALIDATE | RDW_ERASE | RDW_ALLCHILDREN);
