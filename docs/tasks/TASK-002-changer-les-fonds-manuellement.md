@@ -1,6 +1,6 @@
 # TASK-002 — Changer les fonds manuellement
 
-- **Statut :** À faire
+- **Statut :** En cours
 - **Phase :** Phase 1 — Fonds manuels par écran
 - **Priorité :** Haute
 - **Dépendances :** TASK-001
@@ -18,7 +18,14 @@ Construire une première application Win32 x64 avec CMake et MSVC pour associer 
 
 ## Validation et preuves
 
-Non exécutée.
+- 2026-11-14 — Compilation Debug x64 du lot 1 réussie sans avertissement avec CMake et MSVC 19.51.
+
+## Exécution
+
+| Lot | Contenu | Préconditions | Contrôles | État |
+|---|---|---|---|---|
+| 1 | Application Win32 x64 et affichage des écrans | TASK-001 | Compilation Debug | Terminé |
+| 2 | Dossiers par écran, application ciblée et README | Lot 1 | Compilation et parcours manuel sur deux écrans | À faire |
 
 ## Obstacles et reprise
 
