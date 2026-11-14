@@ -2,6 +2,8 @@
 
 Gestionnaire de fonds d’écran pour Windows 11 x64. Choisissez un dossier par moniteur et changez les fonds manuellement ou à intervalles réguliers.
 
+![Fenêtre de Plop-Wallpaper en mode sombre, avec les réglages de rotation pour deux écrans](docs/images/plop-wallpaper.png)
+
 ## Compiler et lancer
 
 Depuis la racine du dépôt, utilisez PowerShell 7, CMake 4.2 ou plus récent et les [Build Tools Visual Studio 18 avec MSVC x64 et le SDK Windows](docs/adr/ADR-001-chaine-msvc.md).
