@@ -7,6 +7,7 @@ endif()
 
 add_executable(PlopWallpaper WIN32
     src/app.rc src/main.cpp src/monitors.cpp src/settings.cpp src/startup.cpp src/theme.cpp src/wallpapers.cpp)
+set_property(TARGET PlopWallpaper PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 target_compile_features(PlopWallpaper PRIVATE cxx_std_20)
 target_compile_definitions(PlopWallpaper PRIVATE UNICODE _UNICODE NOMINMAX WIN32_LEAN_AND_MEAN)
 target_compile_options(PlopWallpaper PRIVATE /W4 /permissive- /utf-8)

@@ -1,5 +1,11 @@
 # Journal des changements
 
+## 0.1.4 — 2026-11-14
+
+- Réduit l’application dans la zone de notification et déclenche la rotation des écrans participants au clic.
+- Ajoute un ordre de rotation aléatoire mémorisé.
+- Affiche les titres des rubriques en vert en mode sombre et ajoute l’icône P/W jaune.
+
 ## 0.1.3 — 2026-11-14
 
 - Répartit les réglages entre les rubriques Rotation, Unique et Générale.

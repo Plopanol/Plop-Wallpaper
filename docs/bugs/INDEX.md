@@ -6,11 +6,12 @@ Statuts : Signalé, Confirmé, En cours, Bloqué, Corrigé à vérifier, Clos, D
 
 | ID | Titre | Statut | Gravité | Composant |
 |---|---|---|---|---|
-| [BUG-001](BUG-001-titres-rubriques-sombres.md) | Titres de rubriques illisibles en mode sombre | Corrigé à vérifier | Normale | Interface |
+
+Aucun.
 
 ## Fermés
 
 | ID | Titre | Statut | Gravité | Composant |
 |---|---|---|---|---|
 
-Aucun.
+| [BUG-001](BUG-001-titres-rubriques-sombres.md) | Titres de rubriques illisibles en mode sombre | Clos | Normale | Interface |

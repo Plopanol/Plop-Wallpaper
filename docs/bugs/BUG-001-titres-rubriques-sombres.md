@@ -1,6 +1,6 @@
 # BUG-001 — Titres de rubriques illisibles en mode sombre
 
-- **Statut :** Corrigé à vérifier
+- **Statut :** Clos
 - **Gravité :** Normale
 - **Composant :** Interface
 - **Signalé le :** 2026-11-14
@@ -28,4 +28,4 @@ Le contrôle de groupe natif dessine son titre avec le thème Windows. La couleu
 
 Les trois cadres et leurs titres sont dessinés par l’application. Parcours de non-régression à exécuter après compilation : ouvrir la fenêtre en mode sombre, vérifier les trois titres verts et lisibles, puis basculer en mode clair et revenir en mode sombre sans relancer. Vérifier que les trois cadres, leurs champs et leurs boutons restent lisibles et utilisables.
 
-Le 2026-11-14, compilation Debug dans `build`, Test-Docs et `git diff --check` réussis. La première édition de liens a échoué avec l’exécutable ouvert. La reconstruction dans `build` a réussi après sa fermeture. Essai manuel et clôture en attente.
+Le 2026-11-14, compilation Debug dans `build`, Test-Docs et `git diff --check` réussis. La première édition de liens a échoué avec l’exécutable ouvert. La reconstruction dans `build` a réussi après sa fermeture. L’utilisateur a validé manuellement les titres verts sur le build Debug corrigé.
