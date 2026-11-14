@@ -1,6 +1,6 @@
 # BUG-003 — Ajustement inactif après un changement de dossier
 
-- **Statut :** Corrigé à vérifier
+- **Statut :** Clos
 - **Gravité :** Normale
 - **Composant :** Fonds d’écran
 - **Signalé le :** 2026-11-14
@@ -33,4 +33,4 @@ Le test CTest BUG-003 reproduit la perte du chemin affiché en 0.1.4. Il vérifi
 - 2026-11-14 — CTest en échec avant correction, réussi après correction en Release et Debug x64. Contrôle documentaire complet réussi.
 - Debug standard en échec sur la chaîne MSVC (LNK1101). Debug local construit avec les symboles embarqués et sans édition de liens incrémentielle.
 - 2026-11-14 — Essai manuel validé par l’utilisateur sur le Debug x64 du commit `39b206a` de TASK-006 : fond du dossier A réajusté en portrait après la sélection du dossier B, puis prochaine image prise dans B.
-- Clôture après vérification sur un exécutable reconstruit depuis la branche principale, après fusion de TASK-006.
+- 2026-11-14 — Vérification de clôture sur `main` (`0cb83f1`, version 0.1.6) après fusion de TASK-006 : reconstruction complète en Debug x64 et quatre tests CTest réussis, dont BUG-003. La validation manuelle du parcours est consignée ci-dessus.
