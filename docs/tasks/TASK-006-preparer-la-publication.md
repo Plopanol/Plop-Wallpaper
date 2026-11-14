@@ -14,6 +14,7 @@
 - [x] Après un changement de dossier, le fond encore affiché peut être réajusté en portrait. La prochaine rotation utilise le nouveau dossier.
 - [ ] Le double-clic sur l’icône de notification restaure la fenêtre sans changer de fond. Le clic simple conserve son action actuelle.
 - [ ] Le tableau affiche une ligne par écran et les colonnes Nom écran, Mode actuel (Rotation ou Unique), Aléatoire/Fixe, Dossier et Ajustement. La sélection pilote les réglages de l’écran et les cellules suivent les changements.
+- [ ] Le mode Rotation ou Unique est mémorisé par écran et affiche uniquement sa rubrique. Les deux anciennes cases de rotation sont retirées. Seuls les écrans en mode Rotation ayant un dossier changent automatiquement de fond.
 - [x] Le fichier `LICENSE` contient la licence MIT. Le script inclut et vérifie ce fichier au prochain conditionnement.
 - [ ] La compilation Release x64, les tests de non-régression, le contrôle documentaire complet et le scan de publication passent. Les parcours visibles sont vérifiés manuellement sur deux écrans.
 
@@ -24,8 +25,11 @@
 | 1 | Licence MIT et inclusion dans le paquet | Attribution du copyright validée | Contrôle documentaire et lecture du script | Terminé |
 | 2 | Actualiser les écrans et conserver le fond affiché durant le changement de dossier | Plan validé | Compilation et tests de non-régression | Terminé |
 | 3 | Restaurer la fenêtre au double-clic et présenter les réglages par écran | Lot 2 | Compilation, contrôles complets et essai manuel | À valider |
+| 4 | Choisir le mode et afficher sa rubrique par écran | Plan validé | Compilation, contrôles et essai manuel sur deux écrans | À valider |
 
 ## Journal des lots
+
+2026-11-14 — Lot 4 implémenté après validation du plan. Les boutons Rotation et Unique remplacent les deux cases d’activation et déterminent la rubrique visible.
 
 2026-11-14 — Lot 1 implémenté avec l’attribution « Copyright (c) 2026 Plop ». Le script inclut la licence dans l’archive et exige sa présence lors de la vérification.
 
@@ -35,6 +39,8 @@
 
 ## Validation et preuves
 
+2026-11-14 — Lot 4 : après suppression d’une référence restante à l’ancien réglage global, les compilations Release et Debug x64, les quatre tests CTest, le contrôle documentaire complet et le scan de publication avec historique passent. Validation manuelle en attente sur `build/debug-modes/Debug/PlopWallpaper.exe`.
+
 2026-11-14 — L’utilisateur a validé les parcours de branchement et de changement de dossier sur le Debug x64 du commit `39b206a`.
 
 2026-11-14 — Compilations Release x64 et Debug x64 réussies, trois tests CTest réussis en Release, dont l’annulation du clic différé. Essai manuel du tableau et de l’icône en attente sur `build/debug-validation/Debug/PlopWallpaper.exe`.
@@ -43,6 +49,6 @@
 
 ## Obstacles et reprise
 
-Essai du lot 3 attendu sur deux écrans, dont un en portrait. Vérifier la sélection, la mise à jour du mode, de l’ordre de rotation, du dossier et de l’ajustement dans le tableau, ainsi que son actualisation au débranchement et à la reconnexion. Avec la rotation active, vérifier qu’un clic simple change le fond des écrans participants et qu’un double-clic restaure la fenêtre sans changer de fond. Avec la rotation désactivée, vérifier que le clic simple restaure la fenêtre.
+Essai attendu sur deux écrans, dont un en portrait. Vérifier le tableau, le sélecteur et la rubrique visible sur chaque écran, puis la mémorisation des modes après redémarrage et reconnexion. Avec un écran en Rotation et l’autre en Unique, vérifier qu’un clic simple change uniquement le fond du premier et qu’un double-clic restaure la fenêtre sans changer de fond. Avec les deux écrans en Unique, vérifier que le clic simple restaure la fenêtre.
 
 Anomalies liées : [BUG-002](../bugs/BUG-002-liste-ecrans-obsolete.md), [BUG-003](../bugs/BUG-003-ajustement-apres-changement-dossier.md) et [BUG-004](../bugs/BUG-004-entetes-tableau-mode-sombre.md).

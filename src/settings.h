@@ -7,9 +7,11 @@ struct MonitorSettings {
     std::filesystem::path lastImage;
     std::filesystem::path previousFolderImage;
     PortraitFit fit = PortraitFit::Width;
-    bool participates = true;
+    bool rotationMode = true;
     std::filesystem::path uniqueImage;
     bool uniqueActive = false;
+
+    bool rotates() const { return rotationMode && !folder.empty(); }
 
     void changeFolder(std::filesystem::path newFolder)
     {
@@ -32,7 +34,6 @@ struct MonitorSettings {
 struct RotationSettings {
     static constexpr UINT maxMinutes = USER_TIMER_MAXIMUM / 60000;
     UINT minutes = 5;
-    bool enabled = false;
     bool random = false;
 };
 

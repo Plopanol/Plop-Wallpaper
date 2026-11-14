@@ -4,6 +4,7 @@
 #include "theme.h"
 #include "tray_click.h"
 
+#include <algorithm>
 #include <commctrl.h>
 #include <dbt.h>
 #include <shellapi.h>
@@ -21,8 +22,8 @@ constexpr int changeWallpaperId = 102;
 constexpr int folderPathId = 103;
 constexpr int statusId = 104;
 constexpr int fitId = 105;
-constexpr int participationId = 106;
-constexpr int rotationId = 107;
+constexpr int rotationModeId = 106;
+constexpr int uniqueModeId = 107;
 constexpr int minutesId = 108;
 constexpr int applyRotationId = 109;
 constexpr int startupId = 110;
@@ -30,6 +31,9 @@ constexpr int chooseImageId = 111;
 constexpr int imagePathId = 112;
 constexpr int randomId = 113;
 constexpr int monitorLabelId = 114;
+constexpr int rotationSectionId = 115;
+constexpr int uniqueSectionId = 116;
+constexpr int intervalLabelId = 117;
 constexpr UINT_PTR rotationTimer = 1;
 constexpr UINT_PTR monitorTimer = 2;
 constexpr UINT_PTR trayClickTimer = 3;
@@ -85,6 +89,7 @@ struct WindowState {
     TrayClick trayClick;
     bool handlingCommand = false;
     bool monitorsPending = false;
+    bool rotationScheduled = false;
 };
 
 NOTIFYICONDATAW trayIcon(HWND window)
@@ -157,7 +162,6 @@ void showTrayMenu(HWND window, WindowState& state, int x, int y)
 
 void showRotationSettings(HWND window, const RotationSettings& rotation)
 {
-    CheckDlgButton(window, rotationId, rotation.enabled ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(window, randomId, rotation.random ? BST_CHECKED : BST_UNCHECKED);
     SetDlgItemInt(window, minutesId, rotation.minutes, FALSE);
 }
@@ -182,8 +186,8 @@ bool updateMonitorRow(HWND window, const WindowState& state, int row)
     const auto index = static_cast<size_t>(row);
     const auto& selection = state.selections[index];
     PCWSTR cells[]{
-        selection.uniqueActive ? L"Unique" : L"Rotation",
-        !selection.uniqueActive && selection.participates && state.rotation.random ? L"Aléatoire" : L"Fixe",
+        selection.rotationMode ? L"Rotation" : L"Unique",
+        selection.rotationMode && state.rotation.random ? L"Aléatoire" : L"Fixe",
         selection.folder.empty() ? L"—" : selection.folder.c_str(),
         fitLabels[monitorFit(state, index)]
     };
@@ -200,18 +204,38 @@ bool updateMonitorRow(HWND window, const WindowState& state, int row)
     return true;
 }
 
-HRESULT scheduleRotation(HWND window, const RotationSettings& rotation)
+bool hasRotatingMonitors(const WindowState& state)
 {
-    if (!rotation.enabled) {
+    return std::any_of(state.selections.begin(), state.selections.end(),
+                       [](const MonitorSettings& monitor) { return monitor.rotates(); });
+}
+
+HRESULT scheduleRotation(HWND window, WindowState& state, UINT minutes, bool restart = false)
+{
+    const bool active = hasRotatingMonitors(state);
+    if (!active) {
         KillTimer(window, rotationTimer);
+        state.rotationScheduled = false;
+        return S_OK;
+    }
+    if (state.rotationScheduled && !restart) {
         return S_OK;
     }
     SetLastError(ERROR_SUCCESS);
-    if (!SetTimer(window, rotationTimer, rotation.minutes * 60000, nullptr)) {
+    if (!SetTimer(window, rotationTimer, minutes * 60000, nullptr)) {
         const auto error = GetLastError();
         return error ? HRESULT_FROM_WIN32(error) : E_FAIL;
     }
+    state.rotationScheduled = true;
     return S_OK;
+}
+
+void syncRotation(HWND window, WindowState& state)
+{
+    if (FAILED(scheduleRotation(window, state, state.rotation.minutes))) {
+        OutputDebugStringW(L"Impossible de programmer la rotation.\n");
+        SetDlgItemTextW(window, statusId, L"Impossible de programmer la rotation.");
+    }
 }
 
 void applyRotationSettings(HWND window, WindowState& state)
@@ -223,13 +247,13 @@ void applyRotationSettings(HWND window, WindowState& state)
         SetFocus(GetDlgItem(window, minutesId));
         return;
     }
-    const RotationSettings next{minutes, IsDlgButtonChecked(window, rotationId) == BST_CHECKED,
-        IsDlgButtonChecked(window, randomId) == BST_CHECKED};
-    HRESULT result = scheduleRotation(window, next);
+    const RotationSettings next{minutes, IsDlgButtonChecked(window, randomId) == BST_CHECKED};
+    HRESULT result = scheduleRotation(window, state, next.minutes, true);
     if (SUCCEEDED(result)) {
         result = state.settings.saveRotation(next);
-        if (FAILED(result) && FAILED(scheduleRotation(window, state.rotation))) {
-            state.rotation.enabled = false;
+        if (FAILED(result) && FAILED(scheduleRotation(window, state, state.rotation.minutes, true))) {
+            KillTimer(window, rotationTimer);
+            state.rotationScheduled = false;
             OutputDebugStringW(L"Impossible de rétablir le minuteur de rotation.\n");
         }
     }
@@ -266,7 +290,7 @@ void rotateWallpapers(HWND window, WindowState& state)
     bool failed = false;
     for (size_t index = 0; index < state.selections.size(); ++index) {
         const auto& selection = state.selections[index];
-        if (selection.participates && !selection.folder.empty()) {
+        if (selection.rotates()) {
             if (advanceWallpaper(state, index) != S_OK) {
                 OutputDebugStringW(L"Rotation : impossible de changer ou d’enregistrer un fond.\n");
                 failed = true;
@@ -291,8 +315,19 @@ void updateSelection(HWND window, WindowState& state, int index)
     EnableWindow(GetDlgItem(window, chooseFolderId), selection != nullptr);
     EnableWindow(GetDlgItem(window, chooseImageId), selection != nullptr);
     EnableWindow(GetDlgItem(window, changeWallpaperId), hasFolder);
-    EnableWindow(GetDlgItem(window, participationId), selection != nullptr);
-    CheckDlgButton(window, participationId, selection && selection->participates ? BST_CHECKED : BST_UNCHECKED);
+    const bool rotation = selection && selection->rotationMode;
+    const bool unique = selection && !selection->rotationMode;
+    CheckDlgButton(window, rotationModeId, rotation ? BST_CHECKED : BST_UNCHECKED);
+    CheckDlgButton(window, uniqueModeId, unique ? BST_CHECKED : BST_UNCHECKED);
+    EnableWindow(GetDlgItem(window, rotationModeId), selection != nullptr);
+    EnableWindow(GetDlgItem(window, uniqueModeId), selection != nullptr);
+    for (int id : {rotationSectionId, folderPathId, chooseFolderId, changeWallpaperId,
+                   randomId, intervalLabelId, minutesId, applyRotationId}) {
+        ShowWindow(GetDlgItem(window, id), rotation ? SW_SHOWNA : SW_HIDE);
+    }
+    for (int id : {uniqueSectionId, imagePathId, chooseImageId}) {
+        ShowWindow(GetDlgItem(window, id), unique ? SW_SHOWNA : SW_HIDE);
+    }
     const int fit = selection ? monitorFit(state, static_cast<size_t>(index)) : -1;
     EnableWindow(GetDlgItem(window, fitId), fit > 0);
     SendDlgItemMessageW(window, fitId, CB_SETCURSEL, fit, 0);
@@ -356,6 +391,7 @@ bool refreshMonitors(HWND window, WindowState& state)
         OutputDebugStringW(L"Impossible d’afficher la liste des écrans.\n");
         SetDlgItemTextW(window, statusId, L"Impossible d’afficher la liste des écrans.");
     }
+    syncRotation(window, state);
     return true;
 }
 
@@ -372,10 +408,13 @@ void scheduleMonitorRefresh(HWND window, WindowState& state)
 
 void activateTrayClick(HWND window, WindowState& state)
 {
-    if (!state.rotation.enabled) {
+    if (state.handlingCommand || (state.monitorsPending && !refreshMonitors(window, state))) {
+        return;
+    }
+    state.monitorsPending = false;
+    if (!hasRotatingMonitors(state)) {
         restoreWindow(window, state);
-    } else if (!state.handlingCommand && (!state.monitorsPending || refreshMonitors(window, state))) {
-        state.monitorsPending = false;
+    } else {
         rotateWallpapers(window, state);
     }
 }
@@ -436,16 +475,18 @@ void handleCommand(HWND window, WindowState& state, WPARAM command)
             return;
         }
         selection = std::move(next);
-    } else if (id == participationId && notification == BN_CLICKED) {
+    } else if ((id == rotationModeId || id == uniqueModeId) && notification == BN_CLICKED) {
         auto next = selection;
-        next.participates = IsDlgButtonChecked(window, participationId) == BST_CHECKED;
+        next.rotationMode = id == rotationModeId;
         const HRESULT result = state.settings.saveMonitor(monitor, next);
         if (FAILED(result)) {
             updateSelection(window, state, index);
-            showError(window, L"Impossible d’enregistrer la participation de cet écran.", result);
+            showError(window, L"Impossible d’enregistrer le mode de cet écran.", result);
             return;
         }
         selection = std::move(next);
+        updateSelection(window, state, index);
+        syncRotation(window, state);
     } else if (id == chooseFolderId && notification == BN_CLICKED) {
         std::filesystem::path folder;
         const HRESULT result = pickFolder(window, folder);
@@ -461,6 +502,7 @@ void handleCommand(HWND window, WindowState& state, WPARAM command)
             }
             selection = std::move(next);
             updateSelection(window, state, index);
+            syncRotation(window, state);
         }
     } else if (id == chooseImageId && notification == BN_CLICKED) {
         std::filesystem::path image;
@@ -520,36 +562,39 @@ LRESULT CALLBACK windowProcedure(HWND window, UINT message, WPARAM key, LPARAM d
         HWND list = createControl(window, WC_LISTVIEWW, L"", WS_BORDER | WS_TABSTOP |
             LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER, 16, 40, 540, 66, monitorListId);
         if (!label || !list ||
-            !createControl(window, L"STATIC", L"Rotation", SS_OWNERDRAW, 16, 112, 540, 176) ||
+            !createControl(window, L"STATIC", L"Mode de l’écran", 0, 16, 119, 104, 22) ||
+            !createControl(window, L"BUTTON", L"Rotation", WS_GROUP | WS_TABSTOP | BS_AUTORADIOBUTTON,
+                124, 115, 100, 24, rotationModeId) ||
+            !createControl(window, L"BUTTON", L"Unique", BS_AUTORADIOBUTTON,
+                228, 115, 100, 24, uniqueModeId) ||
+            !createControl(window, L"STATIC", L"Rotation", WS_GROUP | SS_OWNERDRAW,
+                16, 148, 540, 114, rotationSectionId) ||
             !createControl(window, L"EDIT", L"", WS_BORDER | WS_TABSTOP | ES_READONLY | ES_AUTOHSCROLL,
-                30, 136, 512, 24, folderPathId) ||
+                30, 171, 512, 24, folderPathId) ||
             !createControl(window, L"BUTTON", L"Choisir un dossier…", WS_TABSTOP,
-                30, 168, 156, 26, chooseFolderId) ||
+                30, 201, 156, 26, chooseFolderId) ||
             !createControl(window, L"BUTTON", L"Image suivante", WS_TABSTOP,
-                194, 168, 130, 26, changeWallpaperId) ||
-            !createControl(window, L"BUTTON", L"Faire participer cet écran à la rotation",
-                WS_TABSTOP | BS_AUTOCHECKBOX, 30, 198, 380, 22, participationId) ||
-            !createControl(window, L"BUTTON", L"Activer la rotation générale",
-                WS_TABSTOP | BS_AUTOCHECKBOX, 30, 226, 235, 24, rotationId) ||
-            !createControl(window, L"BUTTON", L"Aléatoire",
-                WS_TABSTOP | BS_AUTOCHECKBOX, 30, 254, 235, 24, randomId) ||
-            !createControl(window, L"STATIC", L"Intervalle (minutes)", 0, 270, 258, 115, 20) ||
+                194, 201, 130, 26, changeWallpaperId) ||
+            !createControl(window, L"BUTTON", L"Aléatoire (commun)",
+                WS_TABSTOP | BS_AUTOCHECKBOX, 30, 230, 175, 24, randomId) ||
+            !createControl(window, L"STATIC", L"Intervalle commun (minutes)", 0,
+                211, 234, 172, 20, intervalLabelId) ||
             !createControl(window, L"EDIT", L"", WS_BORDER | WS_TABSTOP | ES_NUMBER | ES_AUTOHSCROLL,
-                387, 254, 58, 24, minutesId) ||
+                387, 230, 58, 24, minutesId) ||
             !createControl(window, L"BUTTON", L"Appliquer", WS_TABSTOP,
-                456, 253, 86, 26, applyRotationId) ||
-            !createControl(window, L"STATIC", L"Unique", SS_OWNERDRAW, 16, 297, 540, 65) ||
+                456, 229, 86, 26, applyRotationId) ||
+            !createControl(window, L"STATIC", L"Unique", SS_OWNERDRAW, 16, 148, 540, 65, uniqueSectionId) ||
             !createControl(window, L"EDIT", L"", WS_BORDER | WS_TABSTOP | ES_READONLY | ES_AUTOHSCROLL,
-                30, 323, 350, 24, imagePathId) ||
+                30, 171, 350, 24, imagePathId) ||
             !createControl(window, L"BUTTON", L"Choisir une image…", WS_TABSTOP,
-                389, 322, 153, 26, chooseImageId) ||
-            !createControl(window, L"STATIC", L"Générale", SS_OWNERDRAW, 16, 371, 540, 88) ||
-            !createControl(window, L"STATIC", L"Ajustement du fond", 0, 30, 400, 180, 20) ||
+                389, 170, 153, 26, chooseImageId) ||
+            !createControl(window, L"STATIC", L"Générale", SS_OWNERDRAW, 16, 271, 540, 88) ||
+            !createControl(window, L"STATIC", L"Ajustement du fond", 0, 30, 300, 180, 20) ||
             !createControl(window, L"COMBOBOX", L"", WS_TABSTOP | CBS_DROPDOWNLIST,
-                210, 395, 235, 120, fitId) ||
+                210, 295, 235, 120, fitId) ||
             !createControl(window, L"BUTTON", L"Lancer Plop-Wallpaper à l’ouverture de session",
-                WS_TABSTOP | BS_AUTOCHECKBOX, 30, 427, 512, 24, startupId) ||
-            !createControl(window, L"STATIC", L"", 0, 16, 470, 540, 38, statusId)) {
+                WS_TABSTOP | BS_AUTOCHECKBOX, 30, 327, 512, 24, startupId) ||
+            !createControl(window, L"STATIC", L"", 0, 16, 370, 540, 38, statusId)) {
             SetLastError(ERROR_CANNOT_MAKE);
             return -1;
         }
@@ -675,7 +720,7 @@ LRESULT CALLBACK windowProcedure(HWND window, UINT message, WPARAM key, LPARAM d
         } else if (key == monitorTimer && windowState && !windowState->handlingCommand) {
             KillTimer(window, monitorTimer);
             windowState->monitorsPending = !refreshMonitors(window, *windowState);
-        } else if (key == rotationTimer && windowState && windowState->rotation.enabled &&
+        } else if (key == rotationTimer && windowState && windowState->rotationScheduled &&
                    !windowState->handlingCommand &&
                    (!windowState->monitorsPending || refreshMonitors(window, *windowState))) {
             windowState->monitorsPending = false;
@@ -759,7 +804,7 @@ int run(HINSTANCE instance, int show)
     }
 
     constexpr DWORD style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
-    RECT size{0, 0, 572, 515};
+    RECT size{0, 0, 572, 415};
     AdjustWindowRect(&size, style, FALSE);
     HWND window = CreateWindowW(appName, appName, style, CW_USEDEFAULT, CW_USEDEFAULT,
                                 size.right - size.left, size.bottom - size.top,
@@ -777,12 +822,7 @@ int run(HINSTANCE instance, int show)
     } else {
         CheckDlgButton(window, startupId, startupEnabled ? BST_CHECKED : BST_UNCHECKED);
     }
-    result = scheduleRotation(window, state.rotation);
-    if (FAILED(result)) {
-        state.rotation.enabled = false;
-        showRotationSettings(window, state.rotation);
-        showError(window, L"Impossible de programmer la rotation au démarrage.", result);
-    }
+    syncRotation(window, state);
 
     MSG message{};
     BOOL received;

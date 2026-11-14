@@ -102,6 +102,34 @@ bool trayClick()
     return click.take() && !click.take();
 }
 
+bool monitorMode()
+{
+    wchar_t directory[MAX_PATH]{};
+    wchar_t path[MAX_PATH]{};
+    const DWORD length = GetTempPathW(ARRAYSIZE(directory), directory);
+    if (!length || length >= ARRAYSIZE(directory) || !GetTempFileNameW(directory, L"plp", 0, path)) {
+        return false;
+    }
+    const Monitor first{L"A", L"A"};
+    const Monitor second{L"B", L"B"};
+    const Settings settings{path};
+    const bool prepared =
+        WritePrivateProfileStringW(L"Rotation", L"Enabled", L"1", path) &&
+        WritePrivateProfileStringW(L"Monitor:0041", L"Folder", L"A", path) &&
+        WritePrivateProfileStringW(L"Monitor:0042", L"Folder", L"B", path) &&
+        WritePrivateProfileStringW(L"Monitor:0042", L"Participates", L"0", path) &&
+        WritePrivateProfileStringW(L"Monitor:0042", L"LastImage", L"B/image.png", path);
+    auto fixed = settings.loadMonitor(second);
+    const bool migrated = settings.loadMonitor(first).rotates() && !fixed.rotationMode &&
+        fixed.currentImage() == L"B/image.png";
+    fixed.rotationMode = true;
+    const bool persisted = settings.saveRotation(settings.loadRotation()) == S_OK &&
+        settings.saveMonitor(second, fixed) == S_OK &&
+        settings.loadMonitor(first).rotates() && settings.loadMonitor(second).rotates();
+    DeleteFileW(path);
+    return prepared && migrated && persisted;
+}
+
 int main(int argc, char** argv)
 {
     if (argc != 2) {
@@ -110,6 +138,9 @@ int main(int argc, char** argv)
     const std::string_view test = argv[1];
     if (test == "TASK-006-tray-click") {
         return trayClick() ? 0 : 1;
+    }
+    if (test == "TASK-006-monitor-mode") {
+        return monitorMode() ? 0 : 1;
     }
     if (test != "BUG-002" && test != "BUG-003") {
         return 2;
