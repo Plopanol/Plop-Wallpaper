@@ -7,6 +7,7 @@ public:
     void refresh(HWND window);
     void paintBackground(HDC context, const RECT& bounds) const;
     HBRUSH colorControl(HDC context, HWND control, UINT message) const;
+    bool drawSection(const DRAWITEMSTRUCT& item) const;
     bool drawButton(const DRAWITEMSTRUCT& item) const;
 
 private:

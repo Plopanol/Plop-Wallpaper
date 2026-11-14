@@ -1,3 +1,4 @@
+#include "resource.h"
 #include "settings.h"
 #include "startup.h"
 #include "theme.h"
@@ -384,7 +385,7 @@ LRESULT CALLBACK windowProcedure(HWND window, UINT message, WPARAM key, LPARAM d
         HWND list = createControl(window, L"LISTBOX", L"", WS_BORDER | WS_VSCROLL |
             WS_TABSTOP | LBS_NOINTEGRALHEIGHT | LBS_NOTIFY, 16, 40, 540, 60, monitorListId);
         if (!label || !list ||
-            !createControl(window, L"BUTTON", L"Rotation", BS_GROUPBOX, 16, 112, 540, 176) ||
+            !createControl(window, L"STATIC", L"Rotation", SS_OWNERDRAW, 16, 112, 540, 176) ||
             !createControl(window, L"EDIT", L"", WS_BORDER | WS_TABSTOP | ES_READONLY | ES_AUTOHSCROLL,
                 30, 136, 512, 24, folderPathId) ||
             !createControl(window, L"BUTTON", L"Choisir un dossier…", WS_TABSTOP,
@@ -402,12 +403,12 @@ LRESULT CALLBACK windowProcedure(HWND window, UINT message, WPARAM key, LPARAM d
                 387, 254, 58, 24, minutesId) ||
             !createControl(window, L"BUTTON", L"Appliquer", WS_TABSTOP,
                 456, 253, 86, 26, applyRotationId) ||
-            !createControl(window, L"BUTTON", L"Unique", BS_GROUPBOX, 16, 297, 540, 65) ||
+            !createControl(window, L"STATIC", L"Unique", SS_OWNERDRAW, 16, 297, 540, 65) ||
             !createControl(window, L"EDIT", L"", WS_BORDER | WS_TABSTOP | ES_READONLY | ES_AUTOHSCROLL,
                 30, 323, 350, 24, imagePathId) ||
             !createControl(window, L"BUTTON", L"Choisir une image…", WS_TABSTOP,
                 389, 322, 153, 26, chooseImageId) ||
-            !createControl(window, L"BUTTON", L"Générale", BS_GROUPBOX, 16, 371, 540, 88) ||
+            !createControl(window, L"STATIC", L"Générale", SS_OWNERDRAW, 16, 371, 540, 88) ||
             !createControl(window, L"STATIC", L"Ajustement du fond", 0, 30, 400, 180, 20) ||
             !createControl(window, L"COMBOBOX", L"", WS_TABSTOP | CBS_DROPDOWNLIST,
                 210, 395, 235, 120, fitId) ||
@@ -470,8 +471,11 @@ LRESULT CALLBACK windowProcedure(HWND window, UINT message, WPARAM key, LPARAM d
         }
         break;
     case WM_DRAWITEM:
-        if (windowState && windowState->theme.drawButton(*reinterpret_cast<const DRAWITEMSTRUCT*>(data))) {
-            return TRUE;
+        if (windowState) {
+            const auto& item = *reinterpret_cast<const DRAWITEMSTRUCT*>(data);
+            if (windowState->theme.drawSection(item) || windowState->theme.drawButton(item)) {
+                return TRUE;
+            }
         }
         break;
     case WM_SIZE:
@@ -555,7 +559,7 @@ int run(HINSTANCE instance, int show)
     windowClass.lpfnWndProc = windowProcedure;
     windowClass.hInstance = instance;
     windowClass.hCursor = LoadCursorW(nullptr, IDC_ARROW);
-    windowClass.hIcon = LoadIconW(nullptr, IDI_APPLICATION);
+    windowClass.hIcon = LoadIconW(instance, MAKEINTRESOURCEW(IDI_APP_ICON));
     windowClass.hbrBackground = GetSysColorBrush(COLOR_BTNFACE);
     windowClass.lpszClassName = appName;
     if (!RegisterClassW(&windowClass)) {

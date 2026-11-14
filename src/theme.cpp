@@ -10,6 +10,7 @@ constexpr COLORREF backgroundColor = RGB(32, 32, 32);
 constexpr COLORREF fieldColor = RGB(43, 43, 43);
 constexpr COLORREF textColor = RGB(245, 245, 245);
 constexpr COLORREF mutedColor = RGB(165, 165, 165);
+constexpr COLORREF sectionTitleColor = RGB(119, 218, 141);
 
 bool useDarkColors()
 {
@@ -73,6 +74,39 @@ HBRUSH WindowTheme::colorControl(HDC context, HWND control, UINT message) const
     SetTextColor(context, IsWindowEnabled(control) ? textColor : mutedColor);
     SetBkColor(context, color);
     return selectColor(context, color);
+}
+
+bool WindowTheme::drawSection(const DRAWITEMSTRUCT& item) const
+{
+    if (item.CtlType != ODT_STATIC) {
+        return false;
+    }
+    const int saved = SaveDC(item.hDC);
+    if (!saved) {
+        return false;
+    }
+    const auto font = reinterpret_cast<HFONT>(SendMessageW(item.hwndItem, WM_GETFONT, 0, 0));
+    if (font) {
+        SelectObject(item.hDC, font);
+    }
+    wchar_t title[128]{};
+    GetWindowTextW(item.hwndItem, title, ARRAYSIZE(title));
+    auto caption = item.rcItem;
+    caption.left += 10;
+    DrawTextW(item.hDC, title, -1, &caption, DT_CALCRECT | DT_SINGLELINE | DT_NOPREFIX);
+
+    auto frame = item.rcItem;
+    frame.top = (caption.top + caption.bottom) / 2;
+    FrameRect(item.hDC, &frame,
+        dark_ ? selectColor(item.hDC, RGB(94, 94, 94)) : GetSysColorBrush(COLOR_3DSHADOW));
+    auto gap = caption;
+    InflateRect(&gap, 4, 0);
+    paintBackground(item.hDC, gap);
+    SetBkMode(item.hDC, TRANSPARENT);
+    SetTextColor(item.hDC, dark_ ? sectionTitleColor : GetSysColor(COLOR_BTNTEXT));
+    DrawTextW(item.hDC, title, -1, &caption, DT_SINGLELINE | DT_NOPREFIX);
+    RestoreDC(item.hDC, saved);
+    return true;
 }
 
 bool WindowTheme::drawButton(const DRAWITEMSTRUCT& item) const

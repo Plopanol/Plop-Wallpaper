@@ -23,6 +23,7 @@
 
 - 2026-11-14 — Lot 1. Réduction, menu et rotation depuis l’icône implémentés dans le commit `1548927`.
 - 2026-11-14 — Lot 2. Ordre aléatoire partagé par le bouton, le minuteur et le clic sur l’icône. Réglage enregistré dans l’INI.
+- 2026-11-14 — Suivi de validation. Icône de l’application personnalisée avec le monogramme P/W. Correction des titres sombres suivie dans [BUG-001](../bugs/BUG-001-titres-rubriques-sombres.md).
 
 ## Validation et preuves
 
@@ -31,3 +32,4 @@
 - À exécuter sur Windows 11 avec deux écrans. Configurer deux dossiers, laisser un seul écran participant et activer la rotation. Réduire la fenêtre et vérifier son retrait de la barre des tâches. Cliquer sur l’icône et vérifier que seul l’écran participant change. Redémarrer Explorer pendant que la fenêtre est masquée et vérifier le retour de l’icône. Utiliser le clic droit pour rouvrir la fenêtre.
 - Cocher **Aléatoire**, cliquer sur **Appliquer**, puis vérifier les changements au clic et au minuteur avec au moins trois images lisibles. Vérifier que la même image ne s’affiche pas deux fois de suite et que la case reste cochée après **Quitter** puis relance. Désactiver la rotation et vérifier qu’un clic rouvre la fenêtre.
 - Contrôle complet, version et fusion en attente du retour de l’essai manuel.
+- Vérifier que le monogramme P/W jaune apparaît dans l’Explorateur, dans la fenêtre et dans la zone de notification après réduction.
