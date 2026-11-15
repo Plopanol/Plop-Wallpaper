@@ -7,6 +7,7 @@ Cette page fixe l’ordre des travaux. Les statuts figurent dans l’[index des 
 | Ordre | Livrable | Dépendances |
 |---|---|---|
 | [TASK-001](tasks/TASK-001-initialiser-le-projet.md) | Socle documentaire synchronisé et vérifié | Aucune |
+| [TASK-008](tasks/TASK-008-nettoyer-depot.md) | Nettoyage des artefacts de développement | Aucune |
 
 Jalon : les contrôles documentaires et la synchronisation passent.
 

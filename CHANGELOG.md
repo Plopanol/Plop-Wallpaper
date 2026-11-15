@@ -1,5 +1,9 @@
 # Journal des changements
 
+## 0.1.9 — 2026-11-15
+
+- Ajoute une commande et un skill pour nettoyer les artefacts de compilation, les caches et les journaux locaux.
+
 ## 0.1.8 — 2026-11-15
 
 - Ajoute le réglage « Fermer dans la barre de notification ».
