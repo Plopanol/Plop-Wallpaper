@@ -11,6 +11,7 @@ class DesktopWallpaper final : public IDesktopWallpaper {
 public:
     UINT count = 2;
     HRESULT countResult = S_OK;
+    PCWSTR failedRectId = nullptr;
 
     HRESULT STDMETHODCALLTYPE QueryInterface(REFIID, void**) override { return E_NOINTERFACE; }
     ULONG STDMETHODCALLTYPE AddRef() override { return 1; }
@@ -32,8 +33,11 @@ public:
         (*result)[1] = L'\0';
         return S_OK;
     }
-    HRESULT STDMETHODCALLTYPE GetMonitorRECT(LPCWSTR, RECT* rect) override
+    HRESULT STDMETHODCALLTYPE GetMonitorRECT(LPCWSTR id, RECT* rect) override
     {
+        if (failedRectId && lstrcmpW(id, failedRectId) == 0) {
+            return E_FAIL;
+        }
         *rect = {0, 0, 1920, 1080};
         return S_OK;
     }
@@ -88,7 +92,23 @@ bool monitorDetectionRecovery()
             return false;
         }
     }
-    return !retry.take();
+    if (retry.take()) {
+        return false;
+    }
+
+    DISPLAYCONFIG_TARGET_DEVICE_NAME target{};
+    wcscpy_s(target.monitorDevicePath, L"A");
+    wallpaper.failedRectId = L"B";
+    if (readMonitors(wallpaper, monitors, {&target, 1}) != S_OK ||
+        monitors.size() != 1 || monitors[0].id != L"A") {
+        return false;
+    }
+    wallpaper.failedRectId = L"A";
+    if (readMonitors(wallpaper, monitors, {&target, 1}) != E_FAIL) {
+        return false;
+    }
+    target.monitorDevicePath[0] = L'\0';
+    return readMonitors(wallpaper, monitors, {&target, 1}) == E_FAIL;
 }
 
 bool folderChange()

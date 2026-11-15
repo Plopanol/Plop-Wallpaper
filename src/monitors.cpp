@@ -1,5 +1,6 @@
 #include "monitors.h"
 
+#include <algorithm>
 #include <memory>
 
 namespace {
@@ -26,36 +27,43 @@ HRESULT readActivePaths(std::vector<DISPLAYCONFIG_PATH_INFO>& paths)
     return HRESULT_FROM_WIN32(result);
 }
 
-std::wstring monitorName(const std::vector<DISPLAYCONFIG_PATH_INFO>& paths, PCWSTR id)
+std::vector<DISPLAYCONFIG_TARGET_DEVICE_NAME> readActiveTargets()
 {
-    for (const auto& path : paths) {
-        DISPLAYCONFIG_TARGET_DEVICE_NAME name{};
-        name.header.type = DISPLAYCONFIG_DEVICE_INFO_GET_TARGET_NAME;
-        name.header.size = sizeof(name);
-        name.header.adapterId = path.targetInfo.adapterId;
-        name.header.id = path.targetInfo.id;
-        const LONG result = DisplayConfigGetDeviceInfo(&name.header);
+    std::vector<DISPLAYCONFIG_PATH_INFO> paths;
+    if (FAILED(readActivePaths(paths))) {
+        OutputDebugStringW(L"QueryDisplayConfig : noms des moniteurs indisponibles.\n");
+        return {};
+    }
+
+    std::vector<DISPLAYCONFIG_TARGET_DEVICE_NAME> targets(paths.size());
+    for (size_t index = 0; index < paths.size(); ++index) {
+        const auto& path = paths[index];
+        auto& target = targets[index];
+        target.header.type = DISPLAYCONFIG_DEVICE_INFO_GET_TARGET_NAME;
+        target.header.size = sizeof(target);
+        target.header.adapterId = path.targetInfo.adapterId;
+        target.header.id = path.targetInfo.id;
+        const LONG result = DisplayConfigGetDeviceInfo(&target.header);
         if (result != ERROR_SUCCESS) {
             OutputDebugStringW(L"DisplayConfigGetDeviceInfo : lecture du nom impossible.\n");
-            continue;
-        }
-        if (CompareStringOrdinal(id, -1, name.monitorDevicePath, -1, TRUE) == CSTR_EQUAL) {
-            return name.monitorFriendlyDeviceName;
+            target.monitorDevicePath[0] = L'\0';
         }
     }
-    return {};
+    return targets;
 }
 
 }
 
 HRESULT readMonitors(IDesktopWallpaper& wallpaper, std::vector<Monitor>& monitors)
 {
-    std::vector<DISPLAYCONFIG_PATH_INFO> paths;
-    if (FAILED(readActivePaths(paths))) {
-        OutputDebugStringW(L"QueryDisplayConfig : noms des moniteurs indisponibles.\n");
-        paths.clear();
-    }
+    return readMonitors(wallpaper, monitors, readActiveTargets());
+}
 
+HRESULT readMonitors(IDesktopWallpaper& wallpaper, std::vector<Monitor>& monitors,
+                     std::span<const DISPLAYCONFIG_TARGET_DEVICE_NAME> activeTargets)
+{
+    const bool targetsKnown = !activeTargets.empty() &&
+        std::ranges::all_of(activeTargets, [](const auto& target) { return target.monitorDevicePath[0] != L'\0'; });
     UINT count = 0;
     const HRESULT countResult = wallpaper.GetMonitorDevicePathCount(&count);
     if (FAILED(countResult)) {
@@ -73,9 +81,16 @@ HRESULT readMonitors(IDesktopWallpaper& wallpaper, std::vector<Monitor>& monitor
         if (!id || !*id.get()) {
             return E_UNEXPECTED;
         }
+        const auto target = std::ranges::find_if(activeTargets, [&id](const auto& candidate) {
+            return CompareStringOrdinal(id.get(), -1, candidate.monitorDevicePath, -1, TRUE) == CSTR_EQUAL;
+        });
         RECT bounds{};
         const HRESULT rectResult = wallpaper.GetMonitorRECT(id.get(), &bounds);
         if (FAILED(rectResult)) {
+            // Windows can retain wallpaper entries for disconnected monitors and return E_FAIL.
+            if (rectResult == E_FAIL && targetsKnown && target == activeTargets.end()) {
+                continue;
+            }
             return rectResult;
         }
         if (rectResult == S_FALSE || IsRectEmpty(&bounds)) {
@@ -84,10 +99,8 @@ HRESULT readMonitors(IDesktopWallpaper& wallpaper, std::vector<Monitor>& monitor
         const LONG width = bounds.right - bounds.left;
         const LONG height = bounds.bottom - bounds.top;
         const wchar_t* orientation = width >= height ? L"Paysage" : L"Portrait";
-        std::wstring name = monitorName(paths, id.get());
-        if (name.empty()) {
-            name = L"Moniteur";
-        }
+        PCWSTR name = target != activeTargets.end() && target->monitorFriendlyDeviceName[0] != L'\0'
+            ? target->monitorFriendlyDeviceName : L"Moniteur";
         const auto number = std::to_wstring(active.size() + 1);
         active.push_back({id.get(), number + L" — " + name + L" | " +
             std::to_wstring(width) + L" × " + std::to_wstring(height) + L" | " + orientation});

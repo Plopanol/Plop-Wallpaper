@@ -40,3 +40,12 @@ La version 0.1.10 effectue jusqu’à quinze tentatives supplémentaires espacé
 
 - 2026-11-15 — Compilation Debug x64 et cinq tests CTest réussis hors bac à sable après une erreur MSVC C1902 dans le bac à sable. Contrôle documentaire complet réussi.
 - Vérification manuelle attendue sur 0.1.10 : démarrer avec les écrans éteints, les allumer puis vérifier que les lignes des écrans apparaissent sans relancer l’application. Si la liste reste vide, relever le code hexadécimal affiché.
+
+### Cause reproduite sur le poste le 15 novembre 2026
+
+Windows signale deux écrans actifs et l’API `IDesktopWallpaper` fournit quatre entrées. `GetMonitorRECT` réussit pour les deux écrans actifs, puis renvoie `0x80004005` (`E_FAIL`) pour les deux autres entrées. L’application abandonnait l’actualisation entière et conservait une liste vide.
+
+Depuis la version 0.1.11, l’énumération ignore cette erreur précise pour une entrée absente de la liste des sorties actives, lorsque toutes ces sorties ont pu être identifiées. Elle propage toujours l’erreur pour un écran actif ou une topologie incomplète.
+
+- 2026-11-15 — Compilation Debug x64 et cinq tests CTest réussis. Le test BUG-006 couvre l’entrée inactive en erreur, l’erreur sur une sortie active et la liste de sorties incomplète. Un essai sans interface dans la session du poste appelle le code corrigé et obtient `S_OK` avec les deux écrans actifs. Le contrôle documentaire complet a réussi.
+- Vérification manuelle attendue sur 0.1.11 : ouvrir l’application avec les deux écrans allumés et vérifier que les deux lignes apparaissent. Refaire le parcours à l’ouverture de session pour valider le démarrage.

@@ -1,5 +1,9 @@
 # Journal des changements
 
+## 0.1.11 — 2026-11-15
+
+- Affiche les écrans actifs lorsque des entrées conservées pour des moniteurs déconnectés renvoient une erreur.
+
 ## 0.1.10 — 2026-11-15
 
 - Retente la détection après plusieurs échecs successifs et affiche le code Windows si les écrans restent indisponibles.
