@@ -53,7 +53,8 @@ $patterns = [ordered]@{
     'jeton Slack'                 = '\bxox[abprs]-[A-Za-z0-9-]{10,}'
     'JWT (jeton TMDb ou autre)'   = '\beyJ[A-Za-z0-9_-]{10,}\.eyJ[A-Za-z0-9_-]{10,}\.'
     'URL avec identifiants'       = '\b[a-z][a-z0-9+.-]*://[^/\s:@''"]+:[^/\s@''"]+@'
-    'adresse IPv4 privée'         = '\b(10\.\d{1,3}|192\.168|172\.(1[6-9]|2\d|3[01]))\.\d{1,3}\.\d{1,3}\b'
+    # Octets bounded to 255 and no digit group around, so dotted thousands (10.649.887.816) do not match.
+    'adresse IPv4 privée'         = '(?<!\d|\d\.)(10\.(25[0-5]|2[0-4]\d|1?\d?\d)|192\.168|172\.(1[6-9]|2\d|3[01]))(\.(25[0-5]|2[0-4]\d|1?\d?\d)){2}(?!\d|\.\d)'
     'profil utilisateur Windows'  = '\b[A-Za-z]:[\\/]+Users[\\/]+[^\\/\s<]+'
     'dossier personnel Unix'      = '/home/[a-z_][a-z0-9_-]*/'
     'courriel non générique'      = '(?<![A-Za-z0-9._%-])[A-Za-z0-9][A-Za-z0-9._%+-]*@(?!(users\.)?noreply\.|example\.|anthropic\.com)[A-Za-z0-9-]+\.[A-Za-z0-9.-]*[A-Za-z]'

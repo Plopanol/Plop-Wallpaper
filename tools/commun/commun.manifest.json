@@ -35,7 +35,7 @@
     { "chemin": "tools/commun/New-Icones.ps1", "sha256": "dd5744a51dd698c568d6865eddce1c931f5be67eab0fabfaa35cdcbd74275084" },
     { "chemin": "tools/commun/Test-Docs.ps1", "sha256": "185f7ba5c522f52a6915b21ba227a604010f41e749dfd10ce3b859a8c0387fc7" },
     { "chemin": "tools/commun/Test-Liens.ps1", "sha256": "5cc97198cde7f0b1bf587f3f9ce4bdb4e46d5915a771d51266a21c1394e55a8b" },
-    { "chemin": "tools/commun/Test-Publication.ps1", "sha256": "868b28236d3608ea5ca0a646e2abb48f71ef674a2297896435390f4c23b02dbd" },
+    { "chemin": "tools/commun/Test-Publication.ps1", "sha256": "2a5927c525d45a3644951e71031443a0dbb4eee5f21ab4f2b95a5e8a806b3bd7" },
     { "chemin": "tools/commun/Verify-Livrable.ps1", "sha256": "87f3a2dce28dbeedeef9fb60a6cab3b140a338fd162891737bf5e3d597d64ec3" },
     { "chemin": "tools/commun/check_docs.mjs", "sha256": "1010696cea6ff93525ed28d5c0805211897a2eaab9ef8dd4de3c83ec6b57018b" },
     { "chemin": "tools/commun/check_roadmap.mjs", "sha256": "a3760ee1ce39d1003c2d19a531563a6858bebdd0b864dea313858de1a3085fe0" },
