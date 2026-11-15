@@ -105,6 +105,10 @@ Pour tout agent qui en délègue un autre, parce qu'un sous-agent repart à froi
 - Tout correctif reçoit un test de non-régression, parce qu'un défaut corrigé sans test revient.
 - Justifier toute nouvelle dépendance (besoin, licence, maintenance) dans le commit ou l'ADR ; versionner le fichier de verrou ; épingler la version exacte des frameworks UI ; n'ajouter aucune dépendance pour une étape future, parce que chaque dépendance est une dette.
 
+### Stockage de l’application
+
+- Ancrer tous les chemins d’écriture fixés par l’application, y compris ses valeurs par défaut et celles de ses bibliothèques, dans son dossier d’installation ou ses sous-dossiers, parce qu’un livrable doit pouvoir être déplacé, sauvegardé ou supprimé avec son état. Cette règle couvre la configuration, les journaux, les données, les caches, les sauvegardes et les fichiers temporaires. Les chemins fixés ou utilisés par défaut ne doivent pointer ni vers `%APPDATA%`, `%LOCALAPPDATA%`, `%USER%` ou `%USERPROFILE%`, ni ailleurs hors du dossier de l’application. Un emplacement externe est autorisé si l’utilisateur le choisit explicitement dans la configuration, l’interface ou les arguments de lancement.
+
 ### Environnement et contrôles
 
 - Tous les projets sont sous Windows : scripts en PowerShell 7 (`pwsh`), outils documentaires communs en Node (`.mjs`), qui est un prérequis.

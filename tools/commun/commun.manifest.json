@@ -2,7 +2,7 @@
   "version": 1,
   "declaration": "socle v6 ; profil complet ; modules livrable",
   "blocs": [
-    { "nom": "socle", "sha256": "ee0b397ef5a1f12586fe5534adf9cb31f8e6bfd4484949297c5362d4b807ade9" },
+    { "nom": "socle", "sha256": "e50f5e8f3afb8e2f2d7c048693aed107cd24b23220cc30d8affef084b386044e" },
     { "nom": "profil-complet", "sha256": "672a370b15ca5126c049ea6ba0ca032e924b5c9ca3d3a133b45473f2181e0c94" },
     { "nom": "livrable", "sha256": "6262b143d4b9139ccc36b9159e9ec38c9b8487ee83fc302fdfef224cc92cd98b" }
   ],
