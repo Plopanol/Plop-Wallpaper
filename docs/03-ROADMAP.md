@@ -49,6 +49,7 @@ Configuration INI, démarrage, topologie des moniteurs, veille et session.
 |---|---|---|
 | [TASK-006](tasks/TASK-006-preparer-la-publication.md) | Corrections de la revue, tableau des écrans, double-clic et licence MIT | TASK-005 |
 | [TASK-009](tasks/TASK-009-journal-erreurs.md) | Journal local des erreurs avec rotation | Aucune |
+| [TASK-010](tasks/TASK-010-corriger-les-chemins-de-stockage.md) | Démarrage automatique sans raccourci dans le profil Windows | Aucune |
 
 Jalon : les associations survivent au redémarrage et à la reconnexion d’un écran.
 
@@ -60,4 +61,4 @@ Jalon : les mesures sont consignées et la procédure de production du paquet es
 
 ## Prochaine tâche
 
-Aucune tâche planifiée.
+[TASK-010 — Éviter le raccourci dans le profil Windows](tasks/TASK-010-corriger-les-chemins-de-stockage.md)

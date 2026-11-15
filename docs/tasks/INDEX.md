@@ -1,6 +1,6 @@
 # Index des tâches
 
-La fiche fait foi pour le statut. La [roadmap](../03-ROADMAP.md) porte la prochaine tâche. Prochain identifiant libre : TASK-010.
+La fiche fait foi pour le statut. La [roadmap](../03-ROADMAP.md) porte la prochaine tâche. Prochain identifiant libre : TASK-011.
 
 ## Actives
 
@@ -8,7 +8,10 @@ Aucune.
 
 ## À faire
 
-Aucune.
+| ID | Titre | Statut | Phase | Priorité |
+|---|---|---|---|---|
+| [TASK-010](TASK-010-corriger-les-chemins-de-stockage.md) | Éviter le raccourci dans le profil Windows | À faire | Phase 4 — Persistance et événements Windows | Normale |
+
 
 ## Reportées
 
