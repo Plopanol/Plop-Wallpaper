@@ -1,5 +1,9 @@
 # Journal des changements
 
+## 0.1.8 — 2026-11-15
+
+- Ajoute le réglage « Fermer dans la barre de notification ».
+
 ## 0.1.7 — 2026-11-15
 
 - Garde l’application ouverte lorsque Windows ne peut pas détecter les écrans au démarrage.

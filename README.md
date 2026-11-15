@@ -26,6 +26,8 @@ Réduisez la fenêtre pour afficher Plop-Wallpaper dans la zone de notification.
 
 Cochez **Lancer Plop-Wallpaper à l’ouverture de session** pour ajouter un raccourci au dossier Démarrage de votre compte Windows. Décochez la case pour retirer ce raccourci.
 
+Dans **Générale**, cochez **Fermer dans la barre de notification** pour masquer la fenêtre avec le bouton **X** et poursuivre les rotations. La case est décochée par défaut. Pour arrêter l’application depuis la zone de notification, faites un clic droit sur l’icône et choisissez **Quitter**.
+
 La fenêtre suit le mode clair ou sombre des applications dans **Paramètres → Personnalisation → Couleurs** de Windows.
 
 - [Périmètre et critères produit](docs/01-PRODUIT.md)

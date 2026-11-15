@@ -34,6 +34,7 @@ constexpr int monitorLabelId = 114;
 constexpr int rotationSectionId = 115;
 constexpr int uniqueSectionId = 116;
 constexpr int intervalLabelId = 117;
+constexpr int closeToTrayId = 118;
 constexpr UINT_PTR rotationTimer = 1;
 constexpr UINT_PTR monitorTimer = 2;
 constexpr UINT_PTR trayClickTimer = 3;
@@ -86,6 +87,7 @@ struct WindowState {
     std::vector<MonitorSettings> selections;
     UINT taskbarCreated = 0;
     bool inTray = false;
+    bool closeToTray = false;
     TrayClick trayClick;
     bool handlingCommand = false;
     bool monitorsPending = false;
@@ -117,6 +119,14 @@ bool addTrayIcon(HWND window)
     }
     OutputDebugStringW(L"Impossible d’ajouter l’icône de notification.\n");
     return false;
+}
+
+void hideToTray(HWND window, WindowState& state)
+{
+    if (!state.inTray && state.taskbarCreated && addTrayIcon(window)) {
+        state.inTray = true;
+        ShowWindow(window, SW_HIDE);
+    }
 }
 
 void restoreWindow(HWND window, WindowState& state)
@@ -423,6 +433,18 @@ void handleCommand(HWND window, WindowState& state, WPARAM command)
 {
     const int id = LOWORD(command);
     const int notification = HIWORD(command);
+    if (id == closeToTrayId && notification == BN_CLICKED) {
+        const bool enabled = IsDlgButtonChecked(window, closeToTrayId) == BST_CHECKED;
+        const HRESULT result = state.settings.saveCloseToTray(enabled);
+        if (FAILED(result)) {
+            CheckDlgButton(window, closeToTrayId, state.closeToTray ? BST_CHECKED : BST_UNCHECKED);
+            showError(window, L"Impossible d’enregistrer le réglage de fermeture.", result);
+        } else {
+            state.closeToTray = enabled;
+            SetDlgItemTextW(window, statusId, L"Réglage de fermeture enregistré.");
+        }
+        return;
+    }
     if (id == startupId && notification == BN_CLICKED) {
         const bool enabled = IsDlgButtonChecked(window, startupId) == BST_CHECKED;
         const HRESULT result = setStartupEnabled(state.executable, enabled);
@@ -588,13 +610,15 @@ LRESULT CALLBACK windowProcedure(HWND window, UINT message, WPARAM key, LPARAM d
                 30, 171, 350, 24, imagePathId) ||
             !createControl(window, L"BUTTON", L"Choisir une image…", WS_TABSTOP,
                 389, 170, 153, 26, chooseImageId) ||
-            !createControl(window, L"STATIC", L"Générale", SS_OWNERDRAW, 16, 271, 540, 88) ||
+            !createControl(window, L"STATIC", L"Générale", SS_OWNERDRAW, 16, 271, 540, 112) ||
             !createControl(window, L"STATIC", L"Ajustement du fond", 0, 30, 300, 180, 20) ||
             !createControl(window, L"COMBOBOX", L"", WS_TABSTOP | CBS_DROPDOWNLIST,
                 210, 295, 235, 120, fitId) ||
             !createControl(window, L"BUTTON", L"Lancer Plop-Wallpaper à l’ouverture de session",
                 WS_TABSTOP | BS_AUTOCHECKBOX, 30, 327, 512, 24, startupId) ||
-            !createControl(window, L"STATIC", L"", 0, 16, 370, 540, 38, statusId)) {
+            !createControl(window, L"BUTTON", L"Fermer dans la barre de notification",
+                WS_TABSTOP | BS_AUTOCHECKBOX, 30, 351, 512, 24, closeToTrayId) ||
+            !createControl(window, L"STATIC", L"", 0, 16, 394, 540, 38, statusId)) {
             SetLastError(ERROR_CANNOT_MAKE);
             return -1;
         }
@@ -691,11 +715,18 @@ LRESULT CALLBACK windowProcedure(HWND window, UINT message, WPARAM key, LPARAM d
         }
         break;
     }
+    case WM_CLOSE:
+        if (windowState && windowState->closeToTray) {
+            hideToTray(window, *windowState);
+            if (!windowState->inTray) {
+                showError(window, L"Impossible de réduire dans la barre de notification.", E_FAIL);
+            }
+            return 0;
+        }
+        break;
     case WM_SIZE:
-        if (key == SIZE_MINIMIZED && windowState && !windowState->inTray &&
-            windowState->taskbarCreated && addTrayIcon(window)) {
-            windowState->inTray = true;
-            ShowWindow(window, SW_HIDE);
+        if (key == SIZE_MINIMIZED && windowState) {
+            hideToTray(window, *windowState);
         }
         break;
     case trayMessage:
@@ -783,6 +814,7 @@ int run(HINSTANCE instance, int show)
         return 1;
     }
     state.rotation = state.settings.loadRotation();
+    state.closeToTray = state.settings.loadCloseToTray();
     result = CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER,
                               IID_PPV_ARGS(state.imaging.GetAddressOf()));
     if (FAILED(result)) {
@@ -803,7 +835,7 @@ int run(HINSTANCE instance, int show)
     }
 
     constexpr DWORD style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
-    RECT size{0, 0, 572, 415};
+    RECT size{0, 0, 572, 439};
     AdjustWindowRect(&size, style, FALSE);
     HWND window = CreateWindowW(appName, appName, style, CW_USEDEFAULT, CW_USEDEFAULT,
                                 size.right - size.left, size.bottom - size.top,
@@ -817,6 +849,7 @@ int run(HINSTANCE instance, int show)
         scheduleMonitorRefresh(window, state);
     }
     ShowWindow(window, show);
+    CheckDlgButton(window, closeToTrayId, state.closeToTray ? BST_CHECKED : BST_UNCHECKED);
     bool startupEnabled = false;
     result = readStartupEnabled(startupEnabled);
     if (FAILED(result)) {

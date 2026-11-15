@@ -42,8 +42,10 @@ public:
     explicit Settings(std::filesystem::path path);
     MonitorSettings loadMonitor(const Monitor& monitor) const;
     RotationSettings loadRotation() const;
+    bool loadCloseToTray() const;
     HRESULT saveMonitor(const Monitor& monitor, const MonitorSettings& value) const;
     HRESULT saveRotation(const RotationSettings& value) const;
+    HRESULT saveCloseToTray(bool enabled) const;
 
 private:
     HRESULT save(PCWSTR section, std::wstring fields) const;

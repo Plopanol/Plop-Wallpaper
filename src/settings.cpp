@@ -75,6 +75,18 @@ RotationSettings Settings::loadRotation() const
     return value;
 }
 
+bool Settings::loadCloseToTray() const
+{
+    return GetPrivateProfileIntW(L"Window", L"CloseToTray", 0, path_.c_str()) == 1;
+}
+
+HRESULT Settings::saveCloseToTray(bool enabled) const
+{
+    std::wstring fields;
+    appendField(fields, L"CloseToTray", enabled ? L"1" : L"0");
+    return save(L"Window", std::move(fields));
+}
+
 HRESULT Settings::saveMonitor(const Monitor& monitor, const MonitorSettings& value) const
 {
     std::wstring fields;
