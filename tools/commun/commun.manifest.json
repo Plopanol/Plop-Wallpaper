@@ -2,13 +2,12 @@
   "version": 1,
   "declaration": "socle v6 ; profil complet ; modules livrable",
   "blocs": [
-    { "nom": "socle", "sha256": "77df439648bc1dffc16053be3205ff703cc21ee25d2843208f2cabf855ed5c4d" },
+    { "nom": "socle", "sha256": "ee0b397ef5a1f12586fe5534adf9cb31f8e6bfd4484949297c5362d4b807ade9" },
     { "nom": "profil-complet", "sha256": "672a370b15ca5126c049ea6ba0ca032e924b5c9ca3d3a133b45473f2181e0c94" },
     { "nom": "livrable", "sha256": "6262b143d4b9139ccc36b9159e9ec38c9b8487ee83fc302fdfef224cc92cd98b" }
   ],
   "fichiers": [
-    { "chemin": ".agents/skills/add-memory/SKILL.md", "sha256": "0830ddba7a93a85a63a20f635126acf4f0099dbc728bc20760292d02315b3dd0" },
-    { "chemin": ".agents/skills/capitaliser-lecon/SKILL.md", "sha256": "5cf6bdc0290a9ce1cee55b40341743322388606a73996cb72161a6c822887220" },
+    { "chemin": ".agents/skills/capitaliser-lecon/SKILL.md", "sha256": "b56c5ab4dde3edc9587100d4a49ea7d82afacb8166d600bd881a6f4797f46a98" },
     { "chemin": ".agents/skills/cloturer-tache/SKILL.md", "sha256": "999c8ba087977be352e130d7a97e7eee54b1d82970a70510f324aa3d0f382dce" },
     { "chemin": ".agents/skills/demarrer-tache/SKILL.md", "sha256": "e3a361a8c3c854385ce1ab24edb42a08b3010daf56d7e603cdcef263b96a3329" },
     { "chemin": ".agents/skills/generer-livrable/SKILL.md", "sha256": "1aa4e3d18fadef6b58299f2deb9e07247cc11e5859236698495fec3833c4eb94" },
@@ -17,8 +16,7 @@
     { "chemin": ".agents/skills/nouvelle-adr/SKILL.md", "sha256": "3536d5f68bf86f063c7ddc0a18b8c75abaf37e9c571ded47c25d110e6aa3e49c" },
     { "chemin": ".agents/skills/signaler-bug/SKILL.md", "sha256": "98ad7a6007ad2c883821c9bd7fb79d14afbf6f565bd983c18ff0408d59a8e401" },
     { "chemin": ".claude/settings.json", "sha256": "ac537c1cc752e726d8e10195a9d014d3975642b4f6227f30283b3bf689c72b41" },
-    { "chemin": ".claude/skills/add-memory/SKILL.md", "sha256": "fccd8707d15ab7461d3646ea1516ca315445114e10c4f492628556db60d032c4" },
-    { "chemin": ".claude/skills/capitaliser-lecon/SKILL.md", "sha256": "6632d036857bd257ba64647001ab5a0efcf21e4a7a76df5d5f3ce22e3b4d2cc0" },
+    { "chemin": ".claude/skills/capitaliser-lecon/SKILL.md", "sha256": "7902cc2142b64433c83d4c8dd32c963d3f1116d71990f46e0ccbd82cf9f5f045" },
     { "chemin": ".claude/skills/cloturer-tache/SKILL.md", "sha256": "929f26b5c3a3a8829a5eab8e99ed2d635a26fbb8255b454814ddaa91a3efe160" },
     { "chemin": ".claude/skills/demarrer-tache/SKILL.md", "sha256": "a0bbd1a56f6d6a2e7fd45dd85a1f853613e73fd2699e6080f8649b9cba43eb42" },
     { "chemin": ".claude/skills/generer-livrable/SKILL.md", "sha256": "b52307e4a7eb8541908e565a0bac4d379af3a746dee8510df6e1434c14ecc398" },

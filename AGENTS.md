@@ -81,7 +81,7 @@ Pour tout agent qui en délègue un autre, parce qu'un sous-agent repart à froi
 ### Mémoire commune (coffre)
 
 - Avant un travail de toolchain, de build, de langage, de livrable ou d'outillage agent, lire `../_modele-projet/memory/INDEX.md`, puis seulement les fiches des thèmes concernés, parce que leurs pièges y sont déjà résolus. Le coffre se consulte par ce chemin relatif, depuis la racine du projet ; c'est la seule exception au principe « recopié, jamais importé ».
-- Quand un blocage empêche de poursuivre ou de valider le travail, le consigner dans `../_modele-projet/memory/` et mettre à jour `../_modele-projet/memory/INDEX.md` avec le skill `add-memory`, même si la résolution reste ouverte, parce que les agents suivants doivent pouvoir reprendre le diagnostic.
+- Quand un blocage empêche de poursuivre ou de valider le travail, le consigner dans `../_modele-projet/memory/` et mettre à jour `../_modele-projet/memory/INDEX.md` avec le skill `capitaliser-lecon`, même si la résolution reste ouverte, parce que les agents suivants doivent pouvoir reprendre le diagnostic.
 - Une leçon utile à un autre projet devient une fiche du coffre (skill `capitaliser-lecon`, commit `docs(memoire): …` dans `_modele-projet`) ; une leçon propre au projet reste dans le projet (ADR, DETTE, BUG, PROJECT-MEMORY).
 - Le coffre fait foi ; la mémoire automatique de Claude ne garde que des pointeurs, parce qu'elle échappe aux autres outils et aux autres projets. Une fiche fausse passe au statut `faux`, puis sort de l'index.
 
