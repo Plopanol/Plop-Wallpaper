@@ -1,5 +1,9 @@
 # Journal des changements
 
+## 0.1.7 — 2026-11-15
+
+- Garde l’application ouverte lorsque Windows ne peut pas détecter les écrans au démarrage.
+
 ## 0.1.6 — 2026-11-14
 
 - Ajoute le tableau des écrans et le choix mémorisé entre Rotation et Unique.

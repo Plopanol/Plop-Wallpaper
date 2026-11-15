@@ -782,14 +782,6 @@ int run(HINSTANCE instance, int show)
         showError(nullptr, L"Impossible d’accéder aux fonds d’écran Windows.", result);
         return 1;
     }
-    result = readMonitors(*state.wallpaper.Get(), state.monitors);
-    if (FAILED(result)) {
-        showError(nullptr, L"Impossible de détecter les écrans.", result);
-        return 1;
-    }
-    for (const auto& monitor : state.monitors) {
-        state.selections.push_back(state.settings.loadMonitor(monitor));
-    }
     state.rotation = state.settings.loadRotation();
     result = CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER,
                               IID_PPV_ARGS(state.imaging.GetAddressOf()));
@@ -820,6 +812,10 @@ int run(HINSTANCE instance, int show)
         showError(nullptr, L"Impossible d’ouvrir la fenêtre.", HRESULT_FROM_WIN32(GetLastError()));
         return 1;
     }
+    // Keep the window available for display notifications if Windows cannot enumerate monitors yet.
+    if (!refreshMonitors(window, state)) {
+        scheduleMonitorRefresh(window, state);
+    }
     ShowWindow(window, show);
     bool startupEnabled = false;
     result = readStartupEnabled(startupEnabled);
@@ -829,8 +825,6 @@ int run(HINSTANCE instance, int show)
     } else {
         CheckDlgButton(window, startupId, startupEnabled ? BST_CHECKED : BST_UNCHECKED);
     }
-    syncRotation(window, state);
-
     MSG message{};
     BOOL received;
     while ((received = GetMessageW(&message, nullptr, 0, 0)) > 0) {

@@ -6,7 +6,7 @@ Statuts : Signalé, Confirmé, En cours, Bloqué, Corrigé à vérifier, Clos, D
 
 | ID | Titre | Statut | Gravité | Composant |
 |---|---|---|---|---|
-| [BUG-006](BUG-006-detection-ecrans-au-demarrage.md) | Échec de détection des écrans au démarrage | Signalé | Majeure | Moniteurs |
+| [BUG-006](BUG-006-detection-ecrans-au-demarrage.md) | Échec de détection des écrans au démarrage | Corrigé à vérifier | Majeure | Moniteurs |
 
 ## Fermés
 

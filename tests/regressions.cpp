@@ -9,6 +9,7 @@ namespace {
 class DesktopWallpaper final : public IDesktopWallpaper {
 public:
     UINT count = 2;
+    HRESULT countResult = S_OK;
 
     HRESULT STDMETHODCALLTYPE QueryInterface(REFIID, void**) override { return E_NOINTERFACE; }
     ULONG STDMETHODCALLTYPE AddRef() override { return 1; }
@@ -18,7 +19,7 @@ public:
     HRESULT STDMETHODCALLTYPE GetMonitorDevicePathCount(UINT* result) override
     {
         *result = count;
-        return S_OK;
+        return countResult;
     }
     HRESULT STDMETHODCALLTYPE GetMonitorDevicePathAt(UINT index, LPWSTR* result) override
     {
@@ -61,6 +62,20 @@ bool monitorTopology()
     }
     wallpaper.count = 2;
     return readMonitors(wallpaper, monitors) == S_OK && monitors.size() == 2 && monitors[1].id == L"B";
+}
+
+bool monitorDetectionRecovery()
+{
+    DesktopWallpaper wallpaper;
+    std::vector<Monitor> monitors;
+    wallpaper.countResult = E_FAIL;
+    if (readMonitors(wallpaper, monitors) != E_FAIL || !monitors.empty()) {
+        return false;
+    }
+
+    wallpaper.countResult = S_OK;
+    return readMonitors(wallpaper, monitors) == S_OK && monitors.size() == 2 &&
+        monitors[0].id == L"A" && monitors[1].id == L"B";
 }
 
 bool folderChange()
@@ -136,6 +151,9 @@ int main(int argc, char** argv)
         return 2;
     }
     const std::string_view test = argv[1];
+    if (test == "BUG-006") {
+        return monitorDetectionRecovery() ? 0 : 1;
+    }
     if (test == "TASK-006-tray-click") {
         return trayClick() ? 0 : 1;
     }
