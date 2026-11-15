@@ -1,5 +1,6 @@
 # Instructions des agents — Plop-Wallpaper
 <!-- commun: socle v6 ; profil complet ; modules livrable -->
+<!-- commun-ecart: .agents/skills/nettoyer-repo/SKILL.md — nettoyage adapte aux outils de compilation du projet -->
 
 <!-- socle:debut v6 -->
 ## Socle commun Plop (v6)
