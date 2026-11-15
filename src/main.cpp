@@ -1,4 +1,5 @@
 #include "resource.h"
+#include "monitor_retry.h"
 #include "settings.h"
 #include "startup.h"
 #include "theme.h"
@@ -39,6 +40,7 @@ constexpr UINT_PTR rotationTimer = 1;
 constexpr UINT_PTR monitorTimer = 2;
 constexpr UINT_PTR trayClickTimer = 3;
 constexpr UINT monitorRefreshDelay = 250;
+constexpr UINT monitorRetryDelay = 2000;
 constexpr UINT trayMessage = WM_APP + 1;
 constexpr UINT trayIconId = 1;
 
@@ -91,6 +93,7 @@ struct WindowState {
     TrayClick trayClick;
     bool handlingCommand = false;
     bool monitorsPending = false;
+    MonitorRetry monitorRetry;
     bool rotationScheduled = false;
 };
 
@@ -377,11 +380,16 @@ bool showMonitors(HWND window, WindowState& state, const std::wstring& selectedI
 bool refreshMonitors(HWND window, WindowState& state)
 {
     std::vector<Monitor> monitors;
-    if (FAILED(readMonitors(*state.wallpaper.Get(), monitors))) {
-        OutputDebugStringW(L"Impossible d’actualiser les écrans connectés.\n");
-        SetDlgItemTextW(window, statusId, L"Impossible d’actualiser les écrans connectés.");
+    const HRESULT result = readMonitors(*state.wallpaper.Get(), monitors);
+    if (FAILED(result)) {
+        wchar_t message[96]{};
+        swprintf_s(message, L"Impossible d’actualiser les écrans connectés. (0x%08lX)",
+                   static_cast<unsigned long>(result));
+        OutputDebugStringW(message);
+        SetDlgItemTextW(window, statusId, message);
         return false;
     }
+    state.monitorRetry.reset();
 
     const int index = ListView_GetNextItem(GetDlgItem(window, monitorListId), -1, LVNI_SELECTED);
     const auto selectedId = index < 0 ? std::wstring{} : state.monitors[static_cast<size_t>(index)].id;
@@ -405,10 +413,10 @@ bool refreshMonitors(HWND window, WindowState& state)
     return true;
 }
 
-void scheduleMonitorRefresh(HWND window, WindowState& state)
+void scheduleMonitorRefresh(HWND window, WindowState& state, UINT delay = monitorRefreshDelay)
 {
     state.monitorsPending = true;
-    if (!SetTimer(window, monitorTimer, monitorRefreshDelay, nullptr)) {
+    if (!SetTimer(window, monitorTimer, delay, nullptr)) {
         OutputDebugStringW(L"Impossible de programmer l’actualisation des écrans.\n");
         if (!state.handlingCommand) {
             state.monitorsPending = !refreshMonitors(window, state);
@@ -758,6 +766,9 @@ LRESULT CALLBACK windowProcedure(HWND window, UINT message, WPARAM key, LPARAM d
         } else if (key == monitorTimer && windowState && !windowState->handlingCommand) {
             KillTimer(window, monitorTimer);
             windowState->monitorsPending = !refreshMonitors(window, *windowState);
+            if (windowState->monitorsPending && windowState->monitorRetry.take()) {
+                scheduleMonitorRefresh(window, *windowState, monitorRetryDelay);
+            }
         } else if (key == rotationTimer && windowState && windowState->rotationScheduled &&
                    !windowState->handlingCommand &&
                    (!windowState->monitorsPending || refreshMonitors(window, *windowState))) {

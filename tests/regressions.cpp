@@ -1,3 +1,4 @@
+#include "monitor_retry.h"
 #include "settings.h"
 #include "tray_click.h"
 
@@ -66,16 +67,28 @@ bool monitorTopology()
 
 bool monitorDetectionRecovery()
 {
+    MonitorRetry retry;
     DesktopWallpaper wallpaper;
     std::vector<Monitor> monitors;
     wallpaper.countResult = E_FAIL;
-    if (readMonitors(wallpaper, monitors) != E_FAIL || !monitors.empty()) {
-        return false;
+    for (unsigned attempt = 0; attempt < 2; ++attempt) {
+        if (readMonitors(wallpaper, monitors) != E_FAIL || !monitors.empty() || !retry.take()) {
+            return false;
+        }
     }
 
     wallpaper.countResult = S_OK;
-    return readMonitors(wallpaper, monitors) == S_OK && monitors.size() == 2 &&
-        monitors[0].id == L"A" && monitors[1].id == L"B";
+    if (readMonitors(wallpaper, monitors) != S_OK || monitors.size() != 2 ||
+        monitors[0].id != L"A" || monitors[1].id != L"B") {
+        return false;
+    }
+    retry.reset();
+    for (unsigned attempt = 0; attempt < 15; ++attempt) {
+        if (!retry.take()) {
+            return false;
+        }
+    }
+    return !retry.take();
 }
 
 bool folderChange()

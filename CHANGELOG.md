@@ -1,5 +1,9 @@
 # Journal des changements
 
+## 0.1.10 — 2026-11-15
+
+- Retente la détection après plusieurs échecs successifs et affiche le code Windows si les écrans restent indisponibles.
+
 ## 0.1.9 — 2026-11-15
 
 - Ajoute une commande et un skill pour nettoyer les artefacts de compilation, les caches et les journaux locaux.
