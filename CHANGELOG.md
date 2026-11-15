@@ -1,5 +1,9 @@
 # Journal des changements
 
+## 0.1.12 — 2026-11-15
+
+- Journalise les erreurs à côté de l’exécutable et conserve une archive avec un seuil de rotation de 1 Mo.
+
 ## 0.1.11 — 2026-11-15
 
 - Affiche les écrans actifs lorsque des entrées conservées pour des moniteurs déconnectés renvoient une erreur.

@@ -1,4 +1,5 @@
 #include "wallpapers.h"
+#include "error_log.h"
 
 #include <algorithm>
 #include <cmath>
@@ -164,7 +165,7 @@ void removeCachedImage(const fs::path& path)
     std::error_code error;
     fs::remove(path, error);
     if (error) {
-        OutputDebugStringW(L"Impossible de supprimer un ancien fond généré.\n");
+        logError(L"Impossible de supprimer un ancien fond généré.");
     }
 }
 
@@ -266,7 +267,7 @@ HRESULT applyWallpaper(IDesktopWallpaper& wallpaper, IWICImagingFactory& imaging
 
     PWSTR rawPrevious = nullptr;
     if (FAILED(wallpaper.GetWallpaper(monitor.id.c_str(), &rawPrevious))) {
-        OutputDebugStringW(L"Impossible de lire le fond précédent.\n");
+        logError(L"Impossible de lire le fond précédent.");
     }
     const std::unique_ptr<wchar_t, decltype(&CoTaskMemFree)> previous(rawPrevious, CoTaskMemFree);
     result = wallpaper.SetWallpaper(monitor.id.c_str(), output.c_str());
@@ -301,7 +302,7 @@ HRESULT changeWallpaper(IDesktopWallpaper& wallpaper, IWICImagingFactory& imagin
             images.push_back(entry->path());
         }
         if (fileError) {
-            OutputDebugStringW(L"Catalogue : impossible de lire les attributs d’une image.\n");
+            logError(L"Catalogue : impossible de lire les attributs d’une image.");
         }
         entry.increment(error);
     }
@@ -334,7 +335,7 @@ HRESULT changeWallpaper(IDesktopWallpaper& wallpaper, IWICImagingFactory& imagin
         const HRESULT result = applyWallpaper(wallpaper, imaging, monitor, fit, cache, *next);
         if (HRESULT_FACILITY(result) == HRESULT_FACILITY(WINCODEC_ERR_BADIMAGE) ||
             result == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND)) {
-            OutputDebugStringW(L"Catalogue : une image illisible a été ignorée.\n");
+            logError(L"Catalogue : une image illisible a été ignorée.");
             continue;
         }
         if (result == S_OK) {

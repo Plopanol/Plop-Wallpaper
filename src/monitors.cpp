@@ -1,4 +1,5 @@
 #include "monitors.h"
+#include "error_log.h"
 
 #include <algorithm>
 #include <memory>
@@ -31,7 +32,7 @@ std::vector<DISPLAYCONFIG_TARGET_DEVICE_NAME> readActiveTargets()
 {
     std::vector<DISPLAYCONFIG_PATH_INFO> paths;
     if (FAILED(readActivePaths(paths))) {
-        OutputDebugStringW(L"QueryDisplayConfig : noms des moniteurs indisponibles.\n");
+        logError(L"QueryDisplayConfig : noms des moniteurs indisponibles.");
         return {};
     }
 
@@ -45,7 +46,7 @@ std::vector<DISPLAYCONFIG_TARGET_DEVICE_NAME> readActiveTargets()
         target.header.id = path.targetInfo.id;
         const LONG result = DisplayConfigGetDeviceInfo(&target.header);
         if (result != ERROR_SUCCESS) {
-            OutputDebugStringW(L"DisplayConfigGetDeviceInfo : lecture du nom impossible.\n");
+            logError(L"DisplayConfigGetDeviceInfo : lecture du nom impossible.");
             target.monitorDevicePath[0] = L'\0';
         }
     }

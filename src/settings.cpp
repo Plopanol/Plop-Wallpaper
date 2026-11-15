@@ -1,4 +1,5 @@
 #include "settings.h"
+#include "error_log.h"
 
 namespace {
 
@@ -20,7 +21,7 @@ std::filesystem::path readPath(PCWSTR section, PCWSTR key, PCWSTR ini)
     const DWORD length = GetPrivateProfileStringW(section, key, L"", value.data(),
                                                    static_cast<DWORD>(value.size()), ini);
     if (length >= value.size() - 1) {
-        OutputDebugStringW(L"Un chemin dans la configuration est trop long.\n");
+        logError(L"Un chemin dans la configuration est trop long.");
         return {};
     }
     value.resize(length);

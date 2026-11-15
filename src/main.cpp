@@ -1,4 +1,5 @@
 #include "resource.h"
+#include "error_log.h"
 #include "monitor_retry.h"
 #include "settings.h"
 #include "startup.h"
@@ -49,7 +50,7 @@ void showError(HWND owner, PCWSTR message, HRESULT result)
     wchar_t code[16]{};
     swprintf_s(code, L"0x%08lX", static_cast<unsigned long>(result));
     std::wstring detail = std::wstring(message) + L" (" + code + L")";
-    OutputDebugStringW(detail.c_str());
+    logError(detail.c_str());
     MessageBoxW(owner, detail.c_str(), appName, MB_OK | MB_ICONERROR);
 }
 
@@ -120,7 +121,7 @@ bool addTrayIcon(HWND window)
         }
         Shell_NotifyIconW(NIM_DELETE, &icon);
     }
-    OutputDebugStringW(L"Impossible d’ajouter l’icône de notification.\n");
+    logError(L"Impossible d’ajouter l’icône de notification.");
     return false;
 }
 
@@ -210,7 +211,7 @@ bool updateMonitorRow(HWND window, const WindowState& state, int row)
         item.iSubItem = column + 1;
         item.pszText = const_cast<PWSTR>(cells[column]);
         if (!SendMessageW(list, LVM_SETITEMTEXTW, row, reinterpret_cast<LPARAM>(&item))) {
-            OutputDebugStringW(L"Impossible d’actualiser les réglages dans le tableau des écrans.\n");
+            logError(L"Impossible d’actualiser les réglages dans le tableau des écrans.");
             return false;
         }
     }
@@ -246,7 +247,7 @@ HRESULT scheduleRotation(HWND window, WindowState& state, UINT minutes, bool res
 void syncRotation(HWND window, WindowState& state)
 {
     if (FAILED(scheduleRotation(window, state, state.rotation.minutes))) {
-        OutputDebugStringW(L"Impossible de programmer la rotation.\n");
+        logError(L"Impossible de programmer la rotation.");
         SetDlgItemTextW(window, statusId, L"Impossible de programmer la rotation.");
     }
 }
@@ -267,7 +268,7 @@ void applyRotationSettings(HWND window, WindowState& state)
         if (FAILED(result) && FAILED(scheduleRotation(window, state, state.rotation.minutes, true))) {
             KillTimer(window, rotationTimer);
             state.rotationScheduled = false;
-            OutputDebugStringW(L"Impossible de rétablir le minuteur de rotation.\n");
+            logError(L"Impossible de rétablir le minuteur de rotation.");
         }
     }
     if (FAILED(result)) {
@@ -305,7 +306,7 @@ void rotateWallpapers(HWND window, WindowState& state)
         const auto& selection = state.selections[index];
         if (selection.rotates()) {
             if (advanceWallpaper(state, index) != S_OK) {
-                OutputDebugStringW(L"Rotation : impossible de changer ou d’enregistrer un fond.\n");
+                logError(L"Rotation : impossible de changer ou d’enregistrer un fond.");
                 failed = true;
             }
             updateMonitorRow(window, state, static_cast<int>(index));
@@ -385,7 +386,7 @@ bool refreshMonitors(HWND window, WindowState& state)
         wchar_t message[96]{};
         swprintf_s(message, L"Impossible d’actualiser les écrans connectés. (0x%08lX)",
                    static_cast<unsigned long>(result));
-        OutputDebugStringW(message);
+        logError(message);
         SetDlgItemTextW(window, statusId, message);
         return false;
     }
@@ -406,7 +407,7 @@ bool refreshMonitors(HWND window, WindowState& state)
     state.monitors = std::move(monitors);
     state.selections = std::move(selections);
     if (!showMonitors(window, state, selectedId)) {
-        OutputDebugStringW(L"Impossible d’afficher la liste des écrans.\n");
+        logError(L"Impossible d’afficher la liste des écrans.");
         SetDlgItemTextW(window, statusId, L"Impossible d’afficher la liste des écrans.");
     }
     syncRotation(window, state);
@@ -417,7 +418,7 @@ void scheduleMonitorRefresh(HWND window, WindowState& state, UINT delay = monito
 {
     state.monitorsPending = true;
     if (!SetTimer(window, monitorTimer, delay, nullptr)) {
-        OutputDebugStringW(L"Impossible de programmer l’actualisation des écrans.\n");
+        logError(L"Impossible de programmer l’actualisation des écrans.");
         if (!state.handlingCommand) {
             state.monitorsPending = !refreshMonitors(window, state);
         }
@@ -498,7 +499,7 @@ void handleCommand(HWND window, WindowState& state, WPARAM command)
             if (!selection.currentImage().empty() && fit != selection.fit &&
                 FAILED(applyWallpaper(*state.wallpaper.Get(), *state.imaging.Get(), monitor,
                                       selection.fit, state.cache, selection.currentImage()))) {
-                OutputDebugStringW(L"Impossible de rétablir l’ajustement précédent.\n");
+                logError(L"Impossible de rétablir l’ajustement précédent.");
             }
             updateSelection(window, state, index);
             showError(window, L"Impossible d’enregistrer l’ajustement.", result);
@@ -751,7 +752,7 @@ LRESULT CALLBACK windowProcedure(HWND window, UINT message, WPARAM key, LPARAM d
                 if (SetTimer(window, trayClickTimer, GetDoubleClickTime(), nullptr)) {
                     windowState->trayClick.defer();
                 } else {
-                    OutputDebugStringW(L"Impossible de différer le clic sur l’icône de notification.\n");
+                    logError(L"Impossible de différer le clic sur l’icône de notification.");
                     restoreWindow(window, *windowState);
                 }
             }

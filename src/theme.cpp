@@ -1,4 +1,5 @@
 #include "theme.h"
+#include "error_log.h"
 
 #include <commctrl.h>
 #include <dwmapi.h>
@@ -26,7 +27,7 @@ bool useDarkColors()
         const auto foreground = UISettings().GetColorValue(UIColorType::Foreground);
         return 5 * foreground.G + 2 * foreground.R + foreground.B > 8 * 128;
     } catch (const winrt::hresult_error&) {
-        OutputDebugStringW(L"Impossible de lire les couleurs du thème Windows.\n");
+        logError(L"Impossible de lire les couleurs du thème Windows.");
         return false;
     }
 }
@@ -88,7 +89,7 @@ void WindowTheme::refresh(HWND window)
     dark_ = dark;
     const BOOL darkFrame = dark_;
     if (FAILED(DwmSetWindowAttribute(window, DWMWA_USE_IMMERSIVE_DARK_MODE, &darkFrame, sizeof(darkFrame)))) {
-        OutputDebugStringW(L"Impossible d’actualiser le thème de la barre de titre.\n");
+        logError(L"Impossible d’actualiser le thème de la barre de titre.");
     }
     for (HWND child = GetWindow(window, GW_CHILD); child; child = GetWindow(child, GW_HWNDNEXT)) {
         // Explorer styling complements the explicit colors for native combo boxes and scrollbars.
@@ -103,7 +104,7 @@ void WindowTheme::refresh(HWND window)
             const HWND header = ListView_GetHeader(child);
             // The header sends custom-draw notifications to the list view.
             if (!SetWindowSubclass(child, drawMonitorHeader, 1, dark_)) {
-                OutputDebugStringW(L"Impossible de personnaliser les en-têtes du tableau.\n");
+                logError(L"Impossible de personnaliser les en-têtes du tableau.");
             }
             SetWindowTheme(header, dark_ ? L"DarkMode_ItemsView" : nullptr, nullptr);
         }

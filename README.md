@@ -30,6 +30,10 @@ Dans **Générale**, cochez **Fermer dans la barre de notification** pour masque
 
 La fenêtre suit le mode clair ou sombre des applications dans **Paramètres → Personnalisation → Couleurs** de Windows.
 
+## Journal des erreurs
+
+`erreurs.log` est créé à côté de `PlopWallpaper.exe` lors de la première erreur. Il contient des entrées horodatées en UTF-8. Lorsqu’une écriture ferait dépasser 1 Mo (1 000 000 octets), l’application archive le fichier sous `erreurs.1.log` dans le même dossier et remplace l’archive précédente.
+
 - [Périmètre et critères produit](docs/01-PRODUIT.md)
 - [Ordre des travaux](docs/03-ROADMAP.md)
 - [Règles et contrôles du dépôt](AGENTS.md)

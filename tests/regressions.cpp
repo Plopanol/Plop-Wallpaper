@@ -1,7 +1,9 @@
+#include "error_log.h"
 #include "monitor_retry.h"
 #include "settings.h"
 #include "tray_click.h"
 
+#include <fstream>
 #include <iostream>
 #include <string_view>
 
@@ -58,15 +60,15 @@ bool monitorTopology()
 {
     DesktopWallpaper wallpaper;
     std::vector<Monitor> monitors;
-    if (readMonitors(wallpaper, monitors) != S_OK || monitors.size() != 2) {
+    if (readMonitors(wallpaper, monitors, {}) != S_OK || monitors.size() != 2) {
         return false;
     }
     wallpaper.count = 1;
-    if (readMonitors(wallpaper, monitors) != S_OK || monitors.size() != 1 || monitors[0].id != L"A") {
+    if (readMonitors(wallpaper, monitors, {}) != S_OK || monitors.size() != 1 || monitors[0].id != L"A") {
         return false;
     }
     wallpaper.count = 2;
-    return readMonitors(wallpaper, monitors) == S_OK && monitors.size() == 2 && monitors[1].id == L"B";
+    return readMonitors(wallpaper, monitors, {}) == S_OK && monitors.size() == 2 && monitors[1].id == L"B";
 }
 
 bool monitorDetectionRecovery()
@@ -76,13 +78,13 @@ bool monitorDetectionRecovery()
     std::vector<Monitor> monitors;
     wallpaper.countResult = E_FAIL;
     for (unsigned attempt = 0; attempt < 2; ++attempt) {
-        if (readMonitors(wallpaper, monitors) != E_FAIL || !monitors.empty() || !retry.take()) {
+        if (readMonitors(wallpaper, monitors, {}) != E_FAIL || !monitors.empty() || !retry.take()) {
             return false;
         }
     }
 
     wallpaper.countResult = S_OK;
-    if (readMonitors(wallpaper, monitors) != S_OK || monitors.size() != 2 ||
+    if (readMonitors(wallpaper, monitors, {}) != S_OK || monitors.size() != 2 ||
         monitors[0].id != L"A" || monitors[1].id != L"B") {
         return false;
     }
@@ -178,6 +180,48 @@ bool monitorMode()
     return prepared && migrated && persisted;
 }
 
+bool errorLogRotation()
+{
+    wchar_t temp[MAX_PATH]{};
+    wchar_t path[MAX_PATH]{};
+    const DWORD length = GetTempPathW(ARRAYSIZE(temp), temp);
+    if (!length || length >= ARRAYSIZE(temp) || !GetTempFileNameW(temp, L"plp", 0, path)) {
+        return false;
+    }
+    const std::filesystem::path directory = std::wstring(path) + L".logs";
+    const auto log = directory / L"erreurs.log";
+    const auto archive = directory / L"erreurs.1.log";
+    const auto read = [](const auto& file) {
+        std::ifstream stream(file, std::ios::binary);
+        return std::string(std::istreambuf_iterator<char>(stream), {});
+    };
+    constexpr std::uintmax_t limit = 1'000'000;
+    constexpr wchar_t message[] = L"Écran indisponible.";
+    const bool written = appendErrorLog(directory, message);
+    const auto first = read(log);
+    const bool validLine = written && first.ends_with(" [ERREUR] Écran indisponible.\r\n") &&
+        !std::filesystem::exists(archive);
+    if (validLine) {
+        std::filesystem::resize_file(log, limit - first.size());
+    }
+    const bool exactLimit = validLine && appendErrorLog(directory, message) &&
+        std::filesystem::file_size(log) == limit && !std::filesystem::exists(archive);
+    const bool rotated = exactLimit && appendErrorLog(directory, L"Premier roulement.") &&
+        std::filesystem::file_size(archive) == limit && read(log).ends_with("Premier roulement.\r\n");
+    if (rotated) {
+        std::filesystem::resize_file(log, limit);
+    }
+    const bool replaced = rotated && appendErrorLog(directory, L"Second roulement.") &&
+        read(archive).find("Premier roulement.") != std::string::npos &&
+        read(log).ends_with("Second roulement.\r\n");
+    const bool rejected = !appendErrorLog(log, message);
+    DeleteFileW(log.c_str());
+    DeleteFileW(archive.c_str());
+    RemoveDirectoryW(directory.c_str());
+    DeleteFileW(path);
+    return replaced && rejected;
+}
+
 int main(int argc, char** argv)
 {
     if (argc != 2) {
@@ -192,6 +236,9 @@ int main(int argc, char** argv)
     }
     if (test == "TASK-006-monitor-mode") {
         return monitorMode() ? 0 : 1;
+    }
+    if (test == "TASK-009") {
+        return errorLogRotation() ? 0 : 1;
     }
     if (test != "BUG-002" && test != "BUG-003") {
         return 2;

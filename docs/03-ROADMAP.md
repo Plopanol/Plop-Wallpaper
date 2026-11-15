@@ -48,6 +48,7 @@ Configuration INI, démarrage, topologie des moniteurs, veille et session.
 | Ordre | Livrable | Dépendances |
 |---|---|---|
 | [TASK-006](tasks/TASK-006-preparer-la-publication.md) | Corrections de la revue, tableau des écrans, double-clic et licence MIT | TASK-005 |
+| [TASK-009](tasks/TASK-009-journal-erreurs.md) | Journal local des erreurs avec rotation | Aucune |
 
 Jalon : les associations survivent au redémarrage et à la reconnexion d’un écran.
 
