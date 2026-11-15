@@ -1,11 +1,12 @@
 # Index des anomalies
 
-Statuts : Signalé, Confirmé, En cours, Bloqué, Corrigé à vérifier, Clos, Doublon, Rejeté. La fiche fait foi ; usage détaillé dans `WORKFLOW.md` lorsqu'il existe. Prochain identifiant libre : BUG-006.
+Statuts : Signalé, Confirmé, En cours, Bloqué, Corrigé à vérifier, Clos, Doublon, Rejeté. La fiche fait foi ; usage détaillé dans `WORKFLOW.md` lorsqu'il existe. Prochain identifiant libre : BUG-007.
 
 ## Actifs
 
 | ID | Titre | Statut | Gravité | Composant |
 |---|---|---|---|---|
+| [BUG-006](BUG-006-detection-ecrans-au-demarrage.md) | Échec de détection des écrans au démarrage | Signalé | Majeure | Moniteurs |
 
 ## Fermés
 
