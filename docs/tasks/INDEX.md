@@ -12,7 +12,6 @@ Aucune.
 |---|---|---|---|---|
 | [TASK-010](TASK-010-corriger-les-chemins-de-stockage.md) | Éviter le raccourci dans le profil Windows | À faire | Phase 4 — Persistance et événements Windows | Normale |
 
-
 ## Reportées
 
 Aucune.
