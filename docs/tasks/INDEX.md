@@ -8,9 +8,7 @@ Aucune.
 
 ## À faire
 
-| ID | Titre | Statut | Phase | Priorité |
-|---|---|---|---|---|
-| [TASK-010](TASK-010-corriger-les-chemins-de-stockage.md) | Éviter le raccourci dans le profil Windows | À faire | Phase 4 — Persistance et événements Windows | Normale |
+Aucune.
 
 ## Reportées
 
@@ -20,6 +18,7 @@ Aucune.
 
 | ID | Titre | Statut | Phase | Priorité |
 |---|---|---|---|---|
+| [TASK-010](TASK-010-corriger-les-chemins-de-stockage.md) | Éviter le raccourci dans le profil Windows | Abandonnée | Hors séquence | Normale |
 | [TASK-009](TASK-009-journal-erreurs.md) | Journaliser les erreurs | Terminée | Phase 4 — Persistance et événements Windows | Normale |
 | [TASK-001](TASK-001-initialiser-le-projet.md) | Initialiser le projet | Terminée | Phase 0 — Cadrage | Normale |
 | [TASK-002](TASK-002-changer-les-fonds-manuellement.md) | Changer les fonds manuellement | Terminée | Phase 1 — Fonds manuels par écran | Haute |

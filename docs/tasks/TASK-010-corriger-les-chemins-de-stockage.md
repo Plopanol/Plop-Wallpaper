@@ -1,10 +1,10 @@
 # TASK-010 — Éviter le raccourci dans le profil Windows
 
-- **Statut :** À faire
-- **Phase :** Phase 4 — Persistance et événements Windows
+- **Statut :** Abandonnée
+- **Phase :** Hors séquence
 - **Priorité :** Normale
 - **Dépendances :** aucune
-- **Dernière mise à jour :** 2026-11-15
+- **Dernière mise à jour :** 2026-11-16
 
 ## Résultat attendu
 
@@ -19,7 +19,7 @@ Les chemins d’écriture imposés ou utilisés par défaut restent dans le doss
 
 ## Validation et preuves
 
-Non exécutée.
+2026-11-16 — Tâche abandonnée sur décision de l’utilisateur. Le socle autorise le raccourci dans le dossier Démarrage lorsqu’il est créé à la demande de l’utilisateur. Les essais d’ouverture de session prévus pour le remplacement du raccourci n’ont pas été exécutés.
 
 ## Obstacles et reprise
 

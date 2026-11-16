@@ -107,7 +107,7 @@ Pour tout agent qui en délègue un autre, parce qu'un sous-agent repart à froi
 
 ### Stockage de l’application
 
-- Ancrer tous les chemins d’écriture fixés par l’application, y compris ses valeurs par défaut et celles de ses bibliothèques, dans son dossier d’installation ou ses sous-dossiers, parce qu’un livrable doit pouvoir être déplacé, sauvegardé ou supprimé avec son état. Cette règle couvre la configuration, les journaux, les données, les caches, les sauvegardes et les fichiers temporaires. Les chemins fixés ou utilisés par défaut ne doivent pointer ni vers `%APPDATA%`, `%LOCALAPPDATA%`, `%USER%` ou `%USERPROFILE%`, ni ailleurs hors du dossier de l’application. Un emplacement externe est autorisé si l’utilisateur le choisit explicitement dans la configuration, l’interface ou les arguments de lancement.
+- Ancrer tous les chemins d’écriture fixés par l’application, y compris ses valeurs par défaut et celles de ses bibliothèques, dans son dossier d’installation ou ses sous-dossiers, parce qu’un livrable doit pouvoir être déplacé, sauvegardé ou supprimé avec son état. Cette règle couvre la configuration, les journaux, les données, les caches, les sauvegardes et les fichiers temporaires. Les chemins fixés ou utilisés par défaut ne doivent pointer ni vers `%APPDATA%`, `%LOCALAPPDATA%`, `%USER%` ou `%USERPROFILE%`, ni ailleurs hors du dossier de l’application. Un emplacement externe est autorisé si l’utilisateur le choisit explicitement dans la configuration, l’interface ou les arguments de lancement. Les raccourcis `.lnk` créés dans le dossier Démarrage de Windows à la demande de l’utilisateur sont autorisés, parce qu’ils utilisent le mécanisme de lancement à l’ouverture de session prévu par Windows.
 
 ### Environnement et contrôles
 
