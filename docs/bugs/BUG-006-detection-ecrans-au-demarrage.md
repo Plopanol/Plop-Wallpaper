@@ -1,6 +1,6 @@
 # BUG-006 — Échec de détection des écrans au démarrage
 
-- **Statut :** Corrigé à vérifier
+- **Statut :** Clos
 - **Gravité :** Majeure
 - **Composant :** Moniteurs
 - **Signalé le :** 2026-11-15
@@ -49,3 +49,4 @@ Depuis la version 0.1.11, l’énumération ignore cette erreur précise pour un
 
 - 2026-11-15 — Compilation Debug x64 et cinq tests CTest réussis. Le test BUG-006 couvre l’entrée inactive en erreur, l’erreur sur une sortie active et la liste de sorties incomplète. Un essai sans interface dans la session du poste appelle le code corrigé et obtient `S_OK` avec les deux écrans actifs. Le contrôle documentaire complet a réussi.
 - Vérification manuelle attendue sur 0.1.11 : ouvrir l’application avec les deux écrans allumés et vérifier que les deux lignes apparaissent. Refaire le parcours à l’ouverture de session pour valider le démarrage.
+- 2026-11-16 — L’utilisateur confirme la validation manuelle de la détection des écrans au démarrage.

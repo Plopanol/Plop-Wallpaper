@@ -1,6 +1,6 @@
 # BUG-007 — Fenêtre affichée au démarrage
 
-- **Statut :** Corrigé à vérifier
+- **Statut :** Clos
 - **Gravité :** Normale
 - **Composant :** Interface
 - **Signalé le :** 2026-11-16
@@ -32,4 +32,4 @@ La version 0.1.13 inscrit l’icône avant d’afficher la fenêtre. Si l’insc
 
 - 2026-11-16 — Compilation Debug x64 et six tests CTest réussis. La compilation hors bac à sable a résolu l’erreur MSVC C1902 du premier essai.
 - 2026-11-16 — Contrôle documentaire complet réussi.
-- Le test de non-régression manuel reste à exécuter par l’utilisateur.
+- 2026-11-16 — L’utilisateur confirme la validation manuelle du démarrage dans la zone de notification.
