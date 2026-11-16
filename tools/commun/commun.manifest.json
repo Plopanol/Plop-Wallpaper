@@ -2,13 +2,13 @@
   "version": 1,
   "declaration": "socle v6 ; profil complet ; modules livrable",
   "blocs": [
-    { "nom": "socle", "sha256": "3f13a1a1d7e2569e52d80c28ac6f541743644ef8b4ef5e2054ac5d7282bb87e7" },
+    { "nom": "socle", "sha256": "61c841c4c58bb3f1ce5d0d89359a67a3d297e7eb7e806a2c5fbdfebeae0b0a1b" },
     { "nom": "profil-complet", "sha256": "672a370b15ca5126c049ea6ba0ca032e924b5c9ca3d3a133b45473f2181e0c94" },
     { "nom": "livrable", "sha256": "6262b143d4b9139ccc36b9159e9ec38c9b8487ee83fc302fdfef224cc92cd98b" }
   ],
   "fichiers": [
     { "chemin": ".agents/skills/capitaliser-lecon/SKILL.md", "sha256": "b56c5ab4dde3edc9587100d4a49ea7d82afacb8166d600bd881a6f4797f46a98" },
-    { "chemin": ".agents/skills/cloturer-tache/SKILL.md", "sha256": "999c8ba087977be352e130d7a97e7eee54b1d82970a70510f324aa3d0f382dce" },
+    { "chemin": ".agents/skills/cloturer-tache/SKILL.md", "sha256": "d063d723d15f3fe6b2b4f9baf4d50f9598b67a4ed4207c772e09a8e41f5a3728" },
     { "chemin": ".agents/skills/demarrer-tache/SKILL.md", "sha256": "e3a361a8c3c854385ce1ab24edb42a08b3010daf56d7e603cdcef263b96a3329" },
     { "chemin": ".agents/skills/generer-livrable/SKILL.md", "sha256": "1aa4e3d18fadef6b58299f2deb9e07247cc11e5859236698495fec3833c4eb94" },
     { "chemin": ".agents/skills/maintenir-docs/SKILL.md", "sha256": "5972563ebefedc4f343b3ebe33657151bb5250e3391efabd948aa393b09c82dd" },

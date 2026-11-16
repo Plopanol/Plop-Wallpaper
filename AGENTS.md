@@ -64,6 +64,7 @@ Bloc recopié à l'identique depuis `../_modele-projet/SOCLE-COMMUN.md` ; ne pas
 - `À valider` signifie implémenté, en attente de la validation décrite dans la fiche. `Terminée` et `Clos` exigent tous les critères satisfaits et une preuve datée dans la fiche ; `Corrigé à vérifier` n'est jamais `Clos`. Un défaut conservé passe à `Clos` avec un lien vers son entrée de `docs/DETTE.md`.
 - Priorité d'une TASK : Haute, Normale, Basse. Gravité d'un BUG : Bloquante, Majeure, Normale, Mineure.
 - Clore une tâche en mettant à jour la fiche, son index et la `Prochaine tâche` (skill `cloturer-tache`) ; aucun `JOURNAL.md`, parce que la fiche et Git portent déjà l'historique.
+- Sur Windows, la clôture d'une tâche qui a utilisé Gradle inclut l'arrêt des daemons de build selon le skill `cloturer-tache`.
 
 ### Session de travail
 

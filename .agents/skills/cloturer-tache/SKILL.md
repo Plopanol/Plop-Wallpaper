@@ -16,6 +16,7 @@ Réservé à une tâche en une session ou au dernier lot d'une tâche découpée
 7. Mettre à jour la `Prochaine tâche` (section de `docs/03-ROADMAP.md` en profil complet, tête de `docs/tasks/INDEX.md` en profil léger) : un seul lien vers la prochaine tâche exécutable dans l'ordre prévu, ou uniquement « Aucune tâche planifiée. ». Demander à l'utilisateur si le choix est ambigu, parce qu'une priorité inventée égare la session suivante.
 8. Lancer la vérification rapide sur l'état final, puis commiter : un commit pour la tâche (celui du dernier lot pour une tâche découpée), Conventional Commit dont le corps référence la TASK, version et `CHANGELOG.md` compris, sans changement étranger.
 9. Fusionner localement la branche dans la branche principale ; ne pas pousser.
+10. Sur Windows, si la tâche a utilisé Gradle, y compris via Kotlin ou Flutter Android, exécuter `.\gradlew.bat --stop` depuis le dossier du wrapper utilisé, après la dernière commande Gradle. `--stop` agit sur les daemons de la même version, qui peuvent être partagés avec d'autres projets. Si un autre build de cette version est en cours, différer l'arrêt et le signaler dans le rapport. Signaler aussi tout échec de l'arrêt.
 
 Ne déplacer aucune fiche dans `archives/` et ne tenir aucun `JOURNAL.md`, parce que la fiche, l'index et Git portent l'historique.
 
