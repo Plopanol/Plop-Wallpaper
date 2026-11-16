@@ -22,7 +22,7 @@ Sélectionnez un écran dans le tableau et choisissez **Rotation** ou **Unique**
 
 L’intervalle et l’ordre des images sont communs aux écrans en mode **Rotation**. Modifiez-les dans cette rubrique, puis cliquez sur **Appliquer**. L’ordre des chemins est utilisé par défaut. L’ordre choisi s’applique aussi à **Image suivante**. Les réglages sont conservés dans `config.ini`, à côté de l’exécutable.
 
-Réduisez la fenêtre pour afficher Plop-Wallpaper dans la zone de notification. Un double-clic sur l’icône rouvre la fenêtre sans déclencher de rotation. Après le délai de double-clic défini par Windows, un clic simple change le fond des écrans en mode **Rotation** qui ont un dossier. Si aucun écran ne tourne, le clic simple rouvre la fenêtre. Le menu du clic droit permet d’ouvrir ou de quitter l’application.
+Au lancement, Plop-Wallpaper apparaît dans la zone de notification. Réduisez la fenêtre pour y revenir. Un double-clic sur l’icône rouvre la fenêtre sans déclencher de rotation. Après le délai de double-clic défini par Windows, un clic simple change le fond des écrans en mode **Rotation** qui ont un dossier. Si aucun écran ne tourne, le clic simple rouvre la fenêtre. Le menu du clic droit permet d’ouvrir ou de quitter l’application.
 
 Cochez **Lancer Plop-Wallpaper à l’ouverture de session** pour ajouter un raccourci au dossier Démarrage de votre compte Windows. Décochez la case pour retirer ce raccourci.
 

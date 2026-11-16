@@ -7,7 +7,7 @@ Statuts : Signalé, Confirmé, En cours, Bloqué, Corrigé à vérifier, Clos, D
 | ID | Titre | Statut | Gravité | Composant |
 |---|---|---|---|---|
 | [BUG-006](BUG-006-detection-ecrans-au-demarrage.md) | Échec de détection des écrans au démarrage | Corrigé à vérifier | Majeure | Moniteurs |
-| [BUG-007](BUG-007-demarrage-zone-notification.md) | Fenêtre affichée au démarrage | Signalé | Normale | Interface |
+| [BUG-007](BUG-007-demarrage-zone-notification.md) | Fenêtre affichée au démarrage | Corrigé à vérifier | Normale | Interface |
 
 ## Fermés
 

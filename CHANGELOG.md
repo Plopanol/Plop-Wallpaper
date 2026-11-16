@@ -1,5 +1,9 @@
 # Journal des changements
 
+## 0.1.13 — 2026-11-16
+
+- Démarre dans la zone de notification, y compris à l’ouverture de session.
+
 ## 0.1.12 — 2026-11-15
 
 - Journalise les erreurs à côté de l’exécutable et conserve une archive avec un seuil de rotation de 1 Mo.

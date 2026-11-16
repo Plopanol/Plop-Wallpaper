@@ -1,6 +1,6 @@
 # BUG-007 — Fenêtre affichée au démarrage
 
-- **Statut :** Signalé
+- **Statut :** Corrigé à vérifier
 - **Gravité :** Normale
 - **Composant :** Interface
 - **Signalé le :** 2026-11-16
@@ -27,3 +27,9 @@ L’inscription de l’icône est déclenchée par la réduction de la fenêtre 
 ## Correction et vérification
 
 Test de non-régression manuel sur Windows 11 : quitter une instance éventuelle, lancer l’exécutable, vérifier que seule l’icône apparaît dans la zone de notification (éventuellement sous la flèche des icônes masquées), puis double-cliquer sur l’icône et vérifier que la fenêtre s’ouvre. Refaire le parcours à l’ouverture de session si le lancement automatique est activé.
+
+La version 0.1.13 inscrit l’icône avant d’afficher la fenêtre. Si l’inscription échoue, elle affiche la fenêtre pour garder l’application accessible.
+
+- 2026-11-16 — Compilation Debug x64 et six tests CTest réussis. La compilation hors bac à sable a résolu l’erreur MSVC C1902 du premier essai.
+- 2026-11-16 — Contrôle documentaire complet réussi.
+- Le test de non-régression manuel reste à exécuter par l’utilisateur.

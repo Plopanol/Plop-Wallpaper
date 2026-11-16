@@ -129,7 +129,9 @@ void hideToTray(HWND window, WindowState& state)
 {
     if (!state.inTray && state.taskbarCreated && addTrayIcon(window)) {
         state.inTray = true;
-        ShowWindow(window, SW_HIDE);
+        if (IsWindowVisible(window)) {
+            ShowWindow(window, SW_HIDE);
+        }
     }
 }
 
@@ -860,7 +862,10 @@ int run(HINSTANCE instance, int show)
     if (!refreshMonitors(window, state)) {
         scheduleMonitorRefresh(window, state);
     }
-    ShowWindow(window, show);
+    hideToTray(window, state);
+    if (!state.inTray) {
+        ShowWindow(window, show);
+    }
     CheckDlgButton(window, closeToTrayId, state.closeToTray ? BST_CHECKED : BST_UNCHECKED);
     bool startupEnabled = false;
     result = readStartupEnabled(startupEnabled);
