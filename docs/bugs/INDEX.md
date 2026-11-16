@@ -8,7 +8,7 @@ Statuts : Signalé, Confirmé, En cours, Bloqué, Corrigé à vérifier, Clos, D
 |---|---|---|---|---|
 | [BUG-006](BUG-006-detection-ecrans-au-demarrage.md) | Échec de détection des écrans au démarrage | Corrigé à vérifier | Majeure | Moniteurs |
 | [BUG-007](BUG-007-demarrage-zone-notification.md) | Fenêtre affichée au démarrage | Corrigé à vérifier | Normale | Interface |
-| [BUG-008](BUG-008-instance-unique.md) | Plusieurs instances peuvent démarrer | Signalé | Normale | Application |
+| [BUG-008](BUG-008-instance-unique.md) | Plusieurs instances peuvent démarrer | Corrigé à vérifier | Normale | Application |
 
 ## Fermés
 

@@ -1,5 +1,9 @@
 # Journal des changements
 
+## 0.1.14 — 2026-11-16
+
+- Empêche un deuxième lancement dans la même session Windows.
+
 ## 0.1.13 — 2026-11-16
 
 - Démarre dans la zone de notification, y compris à l’ouverture de session.

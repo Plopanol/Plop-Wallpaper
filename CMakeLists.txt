@@ -26,6 +26,8 @@ if(BUILD_TESTING)
     add_test(NAME BUG-002 COMMAND PlopWallpaperTests BUG-002)
     add_test(NAME BUG-003 COMMAND PlopWallpaperTests BUG-003)
     add_test(NAME BUG-006 COMMAND PlopWallpaperTests BUG-006)
+    add_test(NAME BUG-008 COMMAND pwsh -NoProfile -File
+        "${CMAKE_CURRENT_SOURCE_DIR}/tests/single_instance.ps1" -Executable "$<TARGET_FILE:PlopWallpaper>")
     add_test(NAME TASK-006-tray-click COMMAND PlopWallpaperTests TASK-006-tray-click)
     add_test(NAME TASK-006-monitor-mode COMMAND PlopWallpaperTests TASK-006-monitor-mode)
     add_test(NAME TASK-009 COMMAND PlopWallpaperTests TASK-009)

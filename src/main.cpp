@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <commctrl.h>
 #include <dbt.h>
+#include <memory>
 #include <shellapi.h>
 #include <windowsx.h>
 #include <wrl/client.h>
@@ -894,6 +895,20 @@ int run(HINSTANCE instance, int show)
 
 int WINAPI wWinMain(HINSTANCE instance, HINSTANCE, PWSTR, int show)
 {
+    SetLastError(ERROR_SUCCESS);
+    const HANDLE mutex = CreateMutexExW(nullptr, L"Local\\Plop-Wallpaper.SingleInstance", 0, SYNCHRONIZE);
+    const DWORD mutexError = GetLastError();
+    // Keep the named object alive until application shutdown.
+    const std::unique_ptr<void, decltype(&CloseHandle)> instanceGuard(mutex, CloseHandle);
+    if (!instanceGuard) {
+        showError(nullptr, L"Impossible de vérifier si Plop-Wallpaper est déjà lancé.",
+                  HRESULT_FROM_WIN32(mutexError));
+        return 1;
+    }
+    if (mutexError == ERROR_ALREADY_EXISTS) {
+        return 0;
+    }
+
     const HRESULT result = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
     if (FAILED(result)) {
         showError(nullptr, L"Impossible d’initialiser les composants Windows.", result);
