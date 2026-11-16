@@ -1,6 +1,6 @@
 # Index des anomalies
 
-Statuts : Signalé, Confirmé, En cours, Bloqué, Corrigé à vérifier, Clos, Doublon, Rejeté. La fiche fait foi ; usage détaillé dans `WORKFLOW.md` lorsqu'il existe. Prochain identifiant libre : BUG-008.
+Statuts : Signalé, Confirmé, En cours, Bloqué, Corrigé à vérifier, Clos, Doublon, Rejeté. La fiche fait foi ; usage détaillé dans `WORKFLOW.md` lorsqu'il existe. Prochain identifiant libre : BUG-009.
 
 ## Actifs
 
@@ -8,6 +8,7 @@ Statuts : Signalé, Confirmé, En cours, Bloqué, Corrigé à vérifier, Clos, D
 |---|---|---|---|---|
 | [BUG-006](BUG-006-detection-ecrans-au-demarrage.md) | Échec de détection des écrans au démarrage | Corrigé à vérifier | Majeure | Moniteurs |
 | [BUG-007](BUG-007-demarrage-zone-notification.md) | Fenêtre affichée au démarrage | Corrigé à vérifier | Normale | Interface |
+| [BUG-008](BUG-008-instance-unique.md) | Plusieurs instances peuvent démarrer | Signalé | Normale | Application |
 
 ## Fermés
 
